@@ -21,6 +21,9 @@ static Layer *battery_layer;
 static GBitmap *background_image;
 static BitmapLayer *background_layer;
 
+static uint8_t hour_progression;
+static Layer *hour_progression_layer;
+
 static void timer_handler(void *context) {
   uint32_t next_delay;
 
@@ -151,23 +154,29 @@ static void load_background_layer(Layer *window_layer)
  	layer_add_child(window_layer, bitmap_layer_get_layer(background_layer));
 }
 
+static GColor8 get_color_by_percent(uint8_t percent)
+{
+    GColor8 color = GColorBlack;
+    if(battery_level > 50)
+    {
+       color = GColorMalachite;      
+    }
+    else if(battery_level > 25)
+    {
+      color = GColorYellow;  
+    }
+    else
+    {
+      color = GColorRed;
+    }
+    return color;
+}
+
 void battery_layer_update_callback(Layer *layer, GContext *ctx) {
 
   	graphics_context_set_compositing_mode(ctx, GCompOpAssign);
     
-    GColor8 batteryColor = GColorBlack;
-    if(battery_level > 50)
-    {
-       batteryColor = GColorMalachite;      
-    }
-    else if(battery_level > 25)
-    {
-      batteryColor = GColorYellow;  
-    }
-    else
-    {
-      batteryColor = GColorRed;
-    }
+    GColor8 batteryColor = get_color_by_percent(battery_level);
   
   	graphics_context_set_stroke_color(ctx, batteryColor);
   	graphics_context_set_fill_color(ctx,  batteryColor);
@@ -191,6 +200,21 @@ static void load_battery_layer(Layer *window_layer)
   layer_add_child(window_layer, battery_layer);
 }
 
+void hour_progression_layer_update_callback(Layer *layer, GContext *ctx)
+{
+  GColor8 hourColor = get_color_by_percent(hour_progression);
+ 	graphics_context_set_stroke_color(ctx, hourColor);
+ 	graphics_context_set_fill_color(ctx,  hourColor);
+  graphics_fill_rect(ctx, GRect(0, 0, (uint8_t)(hour_progression)/2, 3), 0, GCornerNone);
+}
+
+static void load_hour_progression_layer(Layer *window_layer)
+{
+  hour_progression_layer = layer_create(GRect(21, 31, 50, 3));
+  layer_set_update_proc(hour_progression_layer, &hour_progression_layer_update_callback);
+  layer_add_child(window_layer, hour_progression_layer);
+}
+
 static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   
@@ -201,6 +225,8 @@ static void main_window_load(Window *window) {
   load_background_layer(window_layer);
   
   load_battery_layer(window_layer);
+  
+  load_hour_progression_layer(window_layer);
   
   load_time_text_layer(window_layer);
   
@@ -227,6 +253,9 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
   if (time_text[0] == '0') {
    		memmove(time_text, &time_text[1], sizeof(time_text) - 1);
 	}
+  
+  hour_progression = ((1 - (double)tick_time->tm_min / 60)) * 100;
+  layer_mark_dirty(hour_progression_layer);
   
   text_layer_set_text(text_time_layer, time_text);
  	text_layer_set_text(text_date_layer, date_text);
@@ -256,7 +285,7 @@ void handle_init(void) {
   time_t now = time(NULL);
  	struct tm *tick_time = localtime(&now);
 	handle_minute_tick(tick_time, MINUTE_UNIT);
- 	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
+ 	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);  
   
   battery_state_service_subscribe (&battery_state_handler);
   
