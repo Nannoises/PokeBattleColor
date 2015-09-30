@@ -24,6 +24,14 @@ static BitmapLayer *background_layer;
 static uint8_t hour_progression;
 static Layer *hour_progression_layer;
 
+static GBitmap *ally_status_sleep_image;
+static BitmapLayer *ally_status_sleep_layer;
+
+static GBitmap *ally_status_par_image;
+static BitmapLayer *ally_status_par_layer;
+
+static bool initiate_watchface = true;
+
 static void timer_handler(void *context) {
   uint32_t next_delay;
 
@@ -154,14 +162,60 @@ static void load_background_layer(Layer *window_layer)
  	layer_add_child(window_layer, bitmap_layer_get_layer(background_layer));
 }
 
+static void show_ally_status_sleep() 
+{
+  layer_set_hidden(bitmap_layer_get_layer(ally_status_sleep_layer), false);  
+}
+
+static void hide_ally_status_sleep_layer() 
+{
+  layer_set_hidden(bitmap_layer_get_layer(ally_status_sleep_layer), true);  
+}
+
+static void load_ally_status_sleep_layer(Layer *window_layer)
+{
+  ally_status_sleep_layer = bitmap_layer_create(GRect(85, 118, 50, 10));
+  if(ally_status_sleep_image) {
+    gbitmap_destroy(ally_status_sleep_image);
+    ally_status_sleep_image = NULL;
+  }
+  ally_status_sleep_image = gbitmap_create_with_resource(RESOURCE_ID_STATUS_SLEEP);
+  bitmap_layer_set_bitmap(ally_status_sleep_layer, ally_status_sleep_image);
+  layer_add_child(window_layer, bitmap_layer_get_layer(ally_status_sleep_layer));
+  hide_ally_status_sleep_layer();
+}
+
+static void show_ally_status_par() 
+{
+  layer_set_hidden(bitmap_layer_get_layer(ally_status_par_layer), false);  
+}
+
+static void hide_ally_status_par_layer() 
+{
+  layer_set_hidden(bitmap_layer_get_layer(ally_status_par_layer), true);  
+}
+
+static void load_ally_status_par_layer(Layer *window_layer)
+{
+  ally_status_par_layer = bitmap_layer_create(GRect(60, 118, 50, 10));
+  if(ally_status_par_image) {
+    gbitmap_destroy(ally_status_par_image);
+    ally_status_par_image = NULL;
+  }
+  ally_status_par_image = gbitmap_create_with_resource(RESOURCE_ID_STATUS_PARALYSIS);
+  bitmap_layer_set_bitmap(ally_status_par_layer, ally_status_par_image);
+  layer_add_child(window_layer, bitmap_layer_get_layer(ally_status_par_layer));
+  hide_ally_status_par_layer();
+}
+
 static GColor8 get_color_by_percent(uint8_t percent)
 {
     GColor8 color = GColorBlack;
-    if(battery_level > 50)
+    if(percent > 50)
     {
        color = GColorMalachite;      
     }
-    else if(battery_level > 25)
+    else if(percent > 25)
     {
       color = GColorYellow;  
     }
@@ -181,12 +235,14 @@ void battery_layer_update_callback(Layer *layer, GContext *ctx) {
   	graphics_context_set_stroke_color(ctx, batteryColor);
   	graphics_context_set_fill_color(ctx,  batteryColor);
 
+   	graphics_fill_rect(ctx, GRect(0, 0, (uint8_t)(battery_level)/2, 3), 0, GCornerNone);
+
   	if (!battery_plugged) {
-    	graphics_fill_rect(ctx, GRect(0, 0, (uint8_t)(battery_level)/2, 3), 0, GCornerNone);
- 	}
+      hide_ally_status_par_layer();
+   	}
   	else {	
-    	graphics_draw_bitmap_in_rect(ctx, icon_battery_charge, GRect(1, 0, 50, 2));
- 	}
+    	show_ally_status_par();
+ 	  }
 }
 
 static void load_battery_layer(Layer *window_layer)
@@ -231,6 +287,10 @@ static void main_window_load(Window *window) {
   load_time_text_layer(window_layer);
   
   load_date_text_layer(window_layer);
+  
+  load_ally_status_sleep_layer(window_layer);
+  
+  load_ally_status_par_layer(window_layer);
 }
 
 static void main_window_unload(Window *window) {
@@ -267,6 +327,25 @@ void battery_state_handler(BatteryChargeState charge) {
   layer_mark_dirty(battery_layer);
 }
 
+static void handle_bluetooth(bool connected) {	
+	if (connected) {
+    hide_ally_status_sleep_layer();
+		if (!initiate_watchface) {
+			vibes_double_pulse();
+		}
+	}
+	else {
+		// if the watchface gets started in a disconnected state it will show the SLP-screen, but won't vibrate (that would be annoying while browsing through your watchfaces)
+    show_ally_status_sleep();
+		if (!initiate_watchface) {      
+			vibes_enqueue_custom_pattern( (VibePattern) {
+   				.durations = (uint32_t []) {100, 100, 100, 100, 100},
+   				.num_segments = 5
+			} );
+		}	
+	}
+}
+
 void handle_init(void) {
   time_font  = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TIME_24));
   date_font  = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DATE_7));
@@ -289,8 +368,13 @@ void handle_init(void) {
   
   battery_state_service_subscribe (&battery_state_handler);
   
+  handle_bluetooth(bluetooth_connection_service_peek());
+  bluetooth_connection_service_subscribe(&handle_bluetooth);
+  
 	// App Logging!
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Just pushed a window!");
+  
+  initiate_watchface = false;
 }
 
 void handle_deinit(void) {

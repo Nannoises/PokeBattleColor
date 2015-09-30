@@ -9,6 +9,22 @@
     "resources": {
         "media": [
             {
+                "file": "images/paralysis.png",
+                "name": "STATUS_PARALYSIS",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "png"
+            },
+            {
+                "file": "images/sleep.png",
+                "name": "STATUS_SLEEP",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "png"
+            },
+            {
                 "file": "images/charge.png",
                 "name": "BATTERY_CHARGE",
                 "targetPlatforms": [
