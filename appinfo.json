@@ -9,6 +9,14 @@
     "resources": {
         "media": [
             {
+                "file": "images/charge.png",
+                "name": "BATTERY_CHARGE",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "png"
+            },
+            {
                 "file": "images/menu.png",
                 "menuIcon": true,
                 "name": "MENU",

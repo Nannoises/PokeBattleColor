@@ -13,6 +13,11 @@ static GFont *date_font;
 TextLayer *text_time_layer;
 TextLayer *text_date_layer;
 
+static GBitmap *icon_battery_charge;
+static uint8_t battery_level;
+static bool battery_plugged;
+static Layer *battery_layer;
+
 static GBitmap *background_image;
 static BitmapLayer *background_layer;
 
@@ -146,6 +151,46 @@ static void load_background_layer(Layer *window_layer)
  	layer_add_child(window_layer, bitmap_layer_get_layer(background_layer));
 }
 
+void battery_layer_update_callback(Layer *layer, GContext *ctx) {
+
+  	graphics_context_set_compositing_mode(ctx, GCompOpAssign);
+    
+    GColor8 batteryColor = GColorBlack;
+    if(battery_level > 50)
+    {
+       batteryColor = GColorMalachite;      
+    }
+    else if(battery_level > 25)
+    {
+      batteryColor = GColorYellow;  
+    }
+    else
+    {
+      batteryColor = GColorRed;
+    }
+  
+  	graphics_context_set_stroke_color(ctx, batteryColor);
+  	graphics_context_set_fill_color(ctx,  batteryColor);
+
+  	if (!battery_plugged) {
+    	graphics_fill_rect(ctx, GRect(0, 0, (uint8_t)(battery_level)/2, 3), 0, GCornerNone);
+ 	}
+  	else {	
+    	graphics_draw_bitmap_in_rect(ctx, icon_battery_charge, GRect(1, 0, 50, 2));
+ 	}
+}
+
+static void load_battery_layer(Layer *window_layer)
+{
+  icon_battery_charge = gbitmap_create_with_resource(RESOURCE_ID_BATTERY_CHARGE);
+ 	BatteryChargeState initial = battery_state_service_peek();
+ 	battery_level = initial.charge_percent;
+ 	battery_plugged = initial.is_plugged;
+ 	battery_layer = layer_create(GRect(88,100,50,3));
+ 	layer_set_update_proc(battery_layer, &battery_layer_update_callback);  
+  layer_add_child(window_layer, battery_layer);
+}
+
 static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   
@@ -154,6 +199,8 @@ static void main_window_load(Window *window) {
   load_enemy_pokemon_layer(window_layer);
     
   load_background_layer(window_layer);
+  
+  load_battery_layer(window_layer);
   
   load_time_text_layer(window_layer);
   
@@ -185,6 +232,12 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
  	text_layer_set_text(text_date_layer, date_text);
 }
 
+void battery_state_handler(BatteryChargeState charge) {
+	battery_level = charge.charge_percent;
+  battery_plugged = charge.is_plugged;
+  layer_mark_dirty(battery_layer);
+}
+
 void handle_init(void) {
   time_font  = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TIME_24));
   date_font  = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DATE_7));
@@ -204,6 +257,8 @@ void handle_init(void) {
  	struct tm *tick_time = localtime(&now);
 	handle_minute_tick(tick_time, MINUTE_UNIT);
  	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
+  
+  battery_state_service_subscribe (&battery_state_handler);
   
 	// App Logging!
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Just pushed a window!");
