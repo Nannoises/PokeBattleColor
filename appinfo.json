@@ -1,0 +1,80 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "birdmanherron@gmail.com",
+    "longName": "PokeBattle Color",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "fonts/Pokemon_GB.ttf",
+                "name": "FONT_DATE_7",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "font"
+            },
+            {
+                "characterRegex": "[0-9:]",
+                "file": "fonts/Pokemon_GB.ttf",
+                "name": "FONT_TIME_24",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "font"
+            },
+            {
+                "file": "images/colorBackground.png",
+                "name": "BACKGROUND",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "png"
+            },
+            {
+                "file": "data/006.png",
+                "name": "CHARIZARD_NORM",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
+                "file": "data/497.png",
+                "name": "ANIMATION",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
+                "file": "data/006b.png",
+                "name": "CHARIZARD_BACK",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
+                "file": "data/009.png",
+                "name": "BLASTOISE",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "PokeBattle Color",
+    "targetPlatforms": [
+        "basalt"
+    ],
+    "uuid": "2d81b6f1-3a4a-4375-8e51-a978a29648e6",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": true
+    }
+}
