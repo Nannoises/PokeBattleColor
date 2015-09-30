@@ -9,6 +9,15 @@
     "resources": {
         "media": [
             {
+                "file": "images/menu.png",
+                "menuIcon": true,
+                "name": "MENU",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "png"
+            },
+            {
                 "file": "fonts/Pokemon_GB.ttf",
                 "name": "FONT_DATE_7",
                 "targetPlatforms": [
