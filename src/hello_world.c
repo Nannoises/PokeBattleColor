@@ -8,6 +8,8 @@ static BitmapLayer *e_bitmap_layer;
 static GBitmapSequence *s_sequence = NULL;
 static GBitmapSequence *e_sequence = NULL;
 
+static bool animate = true;
+
 static GFont *time_font;
 static GFont *date_font;
 TextLayer *text_time_layer;
@@ -41,7 +43,10 @@ static void timer_handler(void *context) {
     layer_mark_dirty(bitmap_layer_get_layer(s_bitmap_layer));
 
     // Timer for that delay
-    app_timer_register(next_delay, timer_handler, NULL);
+    if(animate)
+    {
+      app_timer_register(next_delay, timer_handler, NULL);
+    }
   } else {
     // Start again
     gbitmap_sequence_restart(s_sequence);
@@ -57,7 +62,10 @@ static void e_timer_handler(void *context) {
     layer_mark_dirty(bitmap_layer_get_layer(e_bitmap_layer));
 
     // Timer for that delay
-    app_timer_register(next_delay, e_timer_handler, NULL);
+    if(animate)
+    {
+      app_timer_register(next_delay, e_timer_handler, NULL);
+    }
   } else {
     // Start again
     gbitmap_sequence_restart(e_sequence);
@@ -217,7 +225,7 @@ static GColor8 get_color_by_percent(uint8_t percent)
     }
     else if(percent > 25)
     {
-      color = GColorYellow;  
+      color = GColorChromeYellow;  
     }
     else
     {
