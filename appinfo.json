@@ -25,14 +25,6 @@
                 "type": "png"
             },
             {
-                "file": "images/charge.png",
-                "name": "BATTERY_CHARGE",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "png"
-            },
-            {
                 "file": "images/menu.png",
                 "menuIcon": true,
                 "name": "MENU",
@@ -42,8 +34,9 @@
                 "type": "png"
             },
             {
+                "characterRegex": "[A-Z]",
                 "file": "fonts/Pokemon_GB.ttf",
-                "name": "FONT_DATE_7",
+                "name": "FONT_NAME_8",
                 "targetPlatforms": [
                     "basalt"
                 ],
@@ -53,6 +46,14 @@
                 "characterRegex": "[0-9:]",
                 "file": "fonts/Pokemon_GB.ttf",
                 "name": "FONT_TIME_24",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "font"
+            },
+            {
+                "file": "fonts/Pokemon_GB.ttf",
+                "name": "FONT_DATE_7",
                 "targetPlatforms": [
                     "basalt"
                 ],
@@ -69,14 +70,6 @@
             {
                 "file": "data/006.png",
                 "name": "CHARIZARD_NORM",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "raw"
-            },
-            {
-                "file": "data/497.png",
-                "name": "ANIMATION",
                 "targetPlatforms": [
                     "basalt"
                 ],

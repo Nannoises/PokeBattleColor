@@ -15,7 +15,10 @@ static GFont *date_font;
 TextLayer *text_time_layer;
 TextLayer *text_date_layer;
 
-static GBitmap *icon_battery_charge;
+static GFont *pokemon_name_font;
+TextLayer *ally_pokemon_name_layer;
+TextLayer *enemy_pokemon_name_layer;
+
 static uint8_t battery_level;
 static bool battery_plugged;
 static Layer *battery_layer;
@@ -131,7 +134,25 @@ static void load_date_text_layer(Layer *window_layer)
  	text_layer_set_text_color(text_date_layer, GColorBlack);
  	text_layer_set_background_color(text_date_layer, GColorClear);
  	text_layer_set_font(text_date_layer, date_font);
- 	layer_add_child(window_layer, text_layer_get_layer(text_date_layer));
+ 	layer_add_child(window_layer, text_layer_get_layer(text_date_layer));  
+}
+
+static void load_pokemon_name_layers(Layer *window_layer)
+{  
+  pokemon_name_font  = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_NAME_8));
+  ally_pokemon_name_layer = text_layer_create(GRect(70,78,120,12));
+  text_layer_set_text_color(ally_pokemon_name_layer, GColorBlack);
+ 	text_layer_set_background_color(ally_pokemon_name_layer, GColorClear);
+  text_layer_set_font(ally_pokemon_name_layer, pokemon_name_font);
+ 	layer_add_child(window_layer, text_layer_get_layer(ally_pokemon_name_layer));
+  text_layer_set_text(ally_pokemon_name_layer, "CHARIZARD");
+  
+  enemy_pokemon_name_layer = text_layer_create(GRect(5,2,120,12));
+  text_layer_set_text_color(enemy_pokemon_name_layer, GColorBlack);
+ 	text_layer_set_background_color(enemy_pokemon_name_layer, GColorClear);
+  text_layer_set_font(enemy_pokemon_name_layer, pokemon_name_font);
+ 	layer_add_child(window_layer, text_layer_get_layer(enemy_pokemon_name_layer));
+  text_layer_set_text(enemy_pokemon_name_layer, "BLASTOISE");
 }
 
 static void load_ally_pokemon_layer(Layer *window_layer)
@@ -254,9 +275,8 @@ void battery_layer_update_callback(Layer *layer, GContext *ctx) {
 }
 
 static void load_battery_layer(Layer *window_layer)
-{
-  icon_battery_charge = gbitmap_create_with_resource(RESOURCE_ID_BATTERY_CHARGE);
- 	BatteryChargeState initial = battery_state_service_peek();
+{  
+ 	BatteryChargeState initial = battery_state_service_peek();  
  	battery_level = initial.charge_percent;
  	battery_plugged = initial.is_plugged;
  	battery_layer = layer_create(GRect(88,100,50,3));
@@ -299,6 +319,8 @@ static void main_window_load(Window *window) {
   load_ally_status_sleep_layer(window_layer);
   
   load_ally_status_par_layer(window_layer);
+  
+  load_pokemon_name_layers(window_layer);
 }
 
 static void main_window_unload(Window *window) {
@@ -354,6 +376,27 @@ static void handle_bluetooth(bool connected) {
 	}
 }
 
+static void stop_animation()
+{
+  animate = false;
+}
+
+static void handle_tap(AccelAxisType axis, int32_t direction)
+{
+  animate = true;
+  app_timer_register(1, timer_handler, NULL);
+  app_timer_register(1, e_timer_handler, NULL);
+  app_timer_register(10000, stop_animation, NULL);
+}
+
+static void handle_focus(bool in_focus)
+{
+  animate = true;
+  app_timer_register(1, timer_handler, NULL);
+  app_timer_register(1, e_timer_handler, NULL);
+  app_timer_register(10000, stop_animation, NULL);
+}
+
 void handle_init(void) {
   time_font  = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TIME_24));
   date_font  = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DATE_7));
@@ -378,6 +421,10 @@ void handle_init(void) {
   
   handle_bluetooth(bluetooth_connection_service_peek());
   bluetooth_connection_service_subscribe(&handle_bluetooth);
+  
+  accel_tap_service_subscribe(&handle_tap);
+  app_focus_service_subscribe(handle_focus);
+  app_timer_register(10000, stop_animation, NULL);
   
 	// App Logging!
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Just pushed a window!");
