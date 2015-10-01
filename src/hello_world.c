@@ -96,15 +96,8 @@ static void load_sequence() {
     s_bitmap = NULL;
   }
 
-  // Create 
-  if(shinyAlly)
-  {
-    s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_CHARIZARD_BACK);
-  }
-  else
-  {
-    s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_CHARIZARD_NORM);
-  }
+
+  s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_CHARIZARD_NORM);  
   
   // Create GBitmap
   s_bitmap = gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(s_sequence), GBitmapFormat8Bit);
@@ -125,7 +118,14 @@ static void load_e_sequence() {
   }
 
   // Create 
-  e_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_BLASTOISE);
+  if(shinyAlly)
+  {
+    e_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_FLOON_SHINY);
+  }
+  else
+  {
+    e_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_BLASTOISE);  
+  }
 
   // Create GBitmap
   e_bitmap = gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(e_sequence), GBitmapFormat8Bit);
@@ -162,14 +162,14 @@ static void load_pokemon_name_layers(Layer *window_layer)
  	text_layer_set_background_color(ally_pokemon_name_layer, GColorClear);
   text_layer_set_font(ally_pokemon_name_layer, pokemon_name_font);
  	layer_add_child(window_layer, text_layer_get_layer(ally_pokemon_name_layer));
-  text_layer_set_text(ally_pokemon_name_layer, "CHARIZARD");
+  text_layer_set_text(ally_pokemon_name_layer, "TOGEPI");
   
   enemy_pokemon_name_layer = text_layer_create(GRect(5,2,120,12));
   text_layer_set_text_color(enemy_pokemon_name_layer, GColorBlack);
  	text_layer_set_background_color(enemy_pokemon_name_layer, GColorClear);
   text_layer_set_font(enemy_pokemon_name_layer, pokemon_name_font);
  	layer_add_child(window_layer, text_layer_get_layer(enemy_pokemon_name_layer));
-  text_layer_set_text(enemy_pokemon_name_layer, "BLASTOISE");
+  text_layer_set_text(enemy_pokemon_name_layer, "DRIFLOON");
 }
 
 static void load_ally_pokemon_layer(Layer *window_layer)
@@ -386,12 +386,12 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
     if(tick_time->tm_hour == 17)
     {
       shinyAlly = true;
-      load_sequence();
+      load_e_sequence();
     }
     else if(tick_time->tm_hour == 0)
     {
       shinyAlly = false;
-      load_sequence();
+      load_e_sequence();
     }
   }
   

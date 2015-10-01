@@ -9,6 +9,30 @@
     "resources": {
         "media": [
             {
+                "file": "data/425s.png",
+                "name": "FLOON_SHINY",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
+                "file": "data/425.png",
+                "name": "BLASTOISE",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
+                "file": "data/175.png",
+                "name": "CHARIZARD_NORM",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
                 "file": "images/menu.png",
                 "menuIcon": true,
                 "name": "MENU",
@@ -75,30 +99,6 @@
                     "basalt"
                 ],
                 "type": "png"
-            },
-            {
-                "file": "data/006.png",
-                "name": "CHARIZARD_NORM",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "raw"
-            },
-            {
-                "file": "data/006b.png",
-                "name": "CHARIZARD_BACK",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "raw"
-            },
-            {
-                "file": "data/009.png",
-                "name": "BLASTOISE",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "raw"
             }
         ]
     },
