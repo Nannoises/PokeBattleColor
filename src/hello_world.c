@@ -381,10 +381,18 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
    		memmove(time_text, &time_text[1], sizeof(time_text) - 1);
 	}
   
-  if(tick_time->tm_min == 0 && tick_time->tm_hour == 17 && !initiate_watchface)
+  if(tick_time->tm_min == 0 && !initiate_watchface)
   {
-    shinyAlly = true;
-    load_sequence();
+    if(tick_time->tm_hour == 17)
+    {
+      shinyAlly = true;
+      load_sequence();
+    }
+    else if(tick_time->tm_hour == 0)
+    {
+      shinyAlly = false;
+      load_sequence();
+    }
   }
   
   // LEVEL TEXT	

@@ -9,6 +9,15 @@
     "resources": {
         "media": [
             {
+                "file": "images/menu.png",
+                "menuIcon": true,
+                "name": "MENU",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "png"
+            },
+            {
                 "file": "images/paralysis.png",
                 "name": "STATUS_PARALYSIS",
                 "targetPlatforms": [
@@ -19,15 +28,6 @@
             {
                 "file": "images/sleep.png",
                 "name": "STATUS_SLEEP",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "png"
-            },
-            {
-                "file": "images/menu.png",
-                "menuIcon": true,
-                "name": "MENU",
                 "targetPlatforms": [
                     "basalt"
                 ],
