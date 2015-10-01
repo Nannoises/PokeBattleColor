@@ -9,6 +9,7 @@ static GBitmapSequence *s_sequence = NULL;
 static GBitmapSequence *e_sequence = NULL;
 
 static bool animate = true;
+static bool shinyAlly = false;
 
 static GFont *time_font;
 static GFont *date_font;
@@ -87,8 +88,15 @@ static void load_sequence() {
   }
 
   // Create 
-  s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_CHARIZARD_BACK);
-
+  if(shinyAlly)
+  {
+    s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_CHARIZARD_BACK);
+  }
+  else
+  {
+    s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_CHARIZARD_NORM);
+  }
+  
   // Create GBitmap
   s_bitmap = gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(s_sequence), GBitmapFormat8Bit);
 
@@ -344,6 +352,12 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
    		memmove(time_text, &time_text[1], sizeof(time_text) - 1);
 	}
   
+  if(tick_time->tm_min == 0 && tick_time->tm_hour == 17 && !initiate_watchface)
+  {
+    shinyAlly = true;
+    load_sequence();
+  }
+  
   hour_progression = ((1 - (double)tick_time->tm_min / 60)) * 100;
   layer_mark_dirty(hour_progression_layer);
   
@@ -401,6 +415,14 @@ void handle_init(void) {
   time_font  = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TIME_24));
   date_font  = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DATE_7));
   
+  time_t now = time(NULL);
+ 	struct tm *tick_time = localtime(&now);
+    
+  if(tick_time->tm_hour >= 17)
+  {
+    shinyAlly = true;  
+  }
+  
 	// Create a window 
   window = window_create();
   
@@ -412,8 +434,6 @@ void handle_init(void) {
 	// Push the window
 	window_stack_push(window, true);	
   
-  time_t now = time(NULL);
- 	struct tm *tick_time = localtime(&now);
 	handle_minute_tick(tick_time, MINUTE_UNIT);
  	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);  
   
