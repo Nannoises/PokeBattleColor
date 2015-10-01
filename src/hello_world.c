@@ -38,6 +38,15 @@ static BitmapLayer *ally_status_par_layer;
 
 static bool initiate_watchface = true;
 
+#define NUM_LEVEL_PKEY  0
+#define NUM_LEVEL_FRESH 5
+  
+static GFont *level_font;
+int level_int = 5;					
+const char level_text;				
+TextLayer *text_level_ally_layer;	
+TextLayer *text_level_enemy_layer;	
+
 static void timer_handler(void *context) {
   uint32_t next_delay;
 
@@ -307,6 +316,23 @@ static void load_hour_progression_layer(Layer *window_layer)
   layer_add_child(window_layer, hour_progression_layer);
 }
 
+static void load_level_text_layers(Layer *window_layer)
+{
+  text_level_enemy_layer = text_layer_create(GRect(19, 17, 70, 12));
+ 	text_layer_set_text_alignment(text_level_enemy_layer, GTextAlignmentLeft);
+ 	text_layer_set_text_color(text_level_enemy_layer, GColorBlack);
+ 	text_layer_set_background_color(text_level_enemy_layer, GColorClear);
+ 	text_layer_set_font(text_level_enemy_layer, level_font);
+ 	layer_add_child(window_layer, text_layer_get_layer(text_level_enemy_layer));
+
+ 	text_level_ally_layer = text_layer_create(GRect(85, 86, 70, 12));
+ 	text_layer_set_text_alignment(text_level_ally_layer, GTextAlignmentLeft);
+ 	text_layer_set_text_color(text_level_ally_layer, GColorBlack);
+ 	text_layer_set_background_color(text_level_ally_layer, GColorClear);
+ 	text_layer_set_font(text_level_ally_layer, level_font);
+ 	layer_add_child(window_layer, text_layer_get_layer(text_level_ally_layer));
+}
+
 static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   
@@ -329,6 +355,8 @@ static void main_window_load(Window *window) {
   load_ally_status_par_layer(window_layer);
   
   load_pokemon_name_layers(window_layer);
+  
+  load_level_text_layers(window_layer);
 }
 
 static void main_window_unload(Window *window) {
@@ -339,6 +367,7 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
 {    
  	static char time_text[] = "00:00";
  	static char date_text[] = "Xxx,00.00.";
+  static char level_string[100]; //define length of string used to display int 'level_int'
 
  	char *time_format;
  	char *date_format;
@@ -358,6 +387,22 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
     load_sequence();
   }
   
+  // LEVEL TEXT	
+  if(initiate_watchface)
+  {
+    snprintf(level_string, sizeof(level_string), " %d", level_int); 
+		text_layer_set_text(text_level_enemy_layer, level_string);
+		text_layer_set_text(text_level_ally_layer, level_string);
+  }
+  else if ((tick_time->tm_min == 0) && (tick_time->tm_sec == 0)) {
+		level_int++;
+   	APP_LOG(APP_LOG_LEVEL_DEBUG, "+1 [level] added! :)");
+	  snprintf(level_string, sizeof(level_string), " %d", level_int);
+	  text_layer_set_text(text_level_enemy_layer, level_string);  
+	  text_layer_set_text(text_level_ally_layer, level_string);
+
+    APP_LOG(APP_LOG_LEVEL_INFO, "current level = %d", level_int);
+  }
   hour_progression = ((1 - (double)tick_time->tm_min / 60)) * 100;
   layer_mark_dirty(hour_progression_layer);
   
@@ -414,6 +459,7 @@ static void handle_focus(bool in_focus)
 void handle_init(void) {
   time_font  = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TIME_24));
   date_font  = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DATE_7));
+  level_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LEVEL_10));
   
   time_t now = time(NULL);
  	struct tm *tick_time = localtime(&now);
@@ -446,6 +492,10 @@ void handle_init(void) {
   app_focus_service_subscribe(handle_focus);
   app_timer_register(10000, stop_animation, NULL);
   
+	// Get the count from persistent storage for use if it exists, otherwise use the default
+  level_int = persist_exists(NUM_LEVEL_PKEY) ? persist_read_int(NUM_LEVEL_PKEY) : NUM_LEVEL_FRESH;
+  APP_LOG(APP_LOG_LEVEL_INFO, "level status of %d restored!", level_int);  
+  
 	// App Logging!
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Just pushed a window!");
   
@@ -457,6 +507,10 @@ void handle_deinit(void) {
   
 	// Destroy the window
 	window_destroy(window);
+  
+  // Save the count into persistent storage on app exit
+  persist_write_int(NUM_LEVEL_PKEY, level_int);
+  APP_LOG(APP_LOG_LEVEL_INFO, "level status of %d saved!", level_int);
 }
 
 int main(void) {

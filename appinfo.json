@@ -34,6 +34,15 @@
                 "type": "png"
             },
             {
+                "characterRegex": "[0-9]",
+                "file": "fonts/Pokemon_GB.ttf",
+                "name": "FONT_LEVEL_10",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "font"
+            },
+            {
                 "characterRegex": "[A-Z]",
                 "file": "fonts/Pokemon_GB.ttf",
                 "name": "FONT_NAME_8",
