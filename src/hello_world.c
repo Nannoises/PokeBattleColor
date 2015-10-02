@@ -488,6 +488,10 @@ void handle_init(void) {
 	// Push the window
 	window_stack_push(window, true);	
   
+  // Get the count from persistent storage for use if it exists, otherwise use the default
+  level_int = persist_exists(NUM_LEVEL_PKEY) ? persist_read_int(NUM_LEVEL_PKEY) : NUM_LEVEL_FRESH;
+  APP_LOG(APP_LOG_LEVEL_INFO, "level status of %d restored!", level_int);  
+  
 	handle_minute_tick(tick_time, MINUTE_UNIT);
  	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);  
   
@@ -499,10 +503,6 @@ void handle_init(void) {
   accel_tap_service_subscribe(&handle_tap);
   app_focus_service_subscribe(handle_focus);
   app_timer_register(10000, stop_animation, NULL);
-  
-	// Get the count from persistent storage for use if it exists, otherwise use the default
-  level_int = persist_exists(NUM_LEVEL_PKEY) ? persist_read_int(NUM_LEVEL_PKEY) : NUM_LEVEL_FRESH;
-  APP_LOG(APP_LOG_LEVEL_INFO, "level status of %d restored!", level_int);  
   
 	// App Logging!
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Just pushed a window!");

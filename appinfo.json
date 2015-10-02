@@ -18,14 +18,6 @@
                 "type": "png"
             },
             {
-                "file": "images/paralysis.png",
-                "name": "STATUS_PARALYSIS",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "png"
-            },
-            {
                 "file": "images/sleep.png",
                 "name": "STATUS_SLEEP",
                 "targetPlatforms": [
@@ -34,31 +26,20 @@
                 "type": "png"
             },
             {
-                "characterRegex": "[0-9]",
-                "file": "fonts/Pokemon_GB.ttf",
-                "name": "FONT_LEVEL_10",
+                "file": "images/colorBackground.png",
+                "name": "BACKGROUND",
                 "targetPlatforms": [
                     "basalt"
                 ],
-                "type": "font"
+                "type": "png"
             },
             {
-                "characterRegex": "[A-Z]",
-                "file": "fonts/Pokemon_GB.ttf",
-                "name": "FONT_NAME_8",
+                "file": "data/009.png",
+                "name": "BLASTOISE",
                 "targetPlatforms": [
                     "basalt"
                 ],
-                "type": "font"
-            },
-            {
-                "characterRegex": "[0-9:]",
-                "file": "fonts/Pokemon_GB.ttf",
-                "name": "FONT_TIME_24",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "font"
+                "type": "raw"
             },
             {
                 "file": "fonts/Pokemon_GB.ttf",
@@ -67,14 +48,6 @@
                     "basalt"
                 ],
                 "type": "font"
-            },
-            {
-                "file": "images/colorBackground.png",
-                "name": "BACKGROUND",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "png"
             },
             {
                 "file": "data/006.png",
@@ -93,12 +66,12 @@
                 "type": "raw"
             },
             {
-                "file": "data/009.png",
-                "name": "BLASTOISE",
+                "file": "images/paralysis.png",
+                "name": "STATUS_PARALYSIS",
                 "targetPlatforms": [
                     "basalt"
                 ],
-                "type": "raw"
+                "type": "png"
             }
         ]
     },
