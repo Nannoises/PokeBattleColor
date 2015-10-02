@@ -42,6 +42,33 @@
                 "type": "raw"
             },
             {
+                "characterRegex": "[0-9]",
+                "file": "fonts/Pokemon_GB.ttf",
+                "name": "FONT_LEVEL_10",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "font"
+            },
+            {
+                "characterRegex": "[0-9:]",
+                "file": "fonts/Pokemon_GB.ttf",
+                "name": "FONT_TIME_24",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "font"
+            },
+            {
+                "characterRegex": "[A-Z]",
+                "file": "fonts/Pokemon_GB.ttf",
+                "name": "FONT_NAME_8",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "font"
+            },
+            {
                 "file": "fonts/Pokemon_GB.ttf",
                 "name": "FONT_DATE_7",
                 "targetPlatforms": [
