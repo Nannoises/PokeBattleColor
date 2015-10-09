@@ -304,8 +304,8 @@ static void load_pokemon_name_layers(Layer *window_layer)
 static void load_ally_pokemon_layer(Layer *window_layer)
 {
   GRect bounds = layer_get_bounds(window_layer);  
-  bounds.origin.x -= 50;
-  bounds.origin.y += 15;
+  bounds.origin.x -= 45;
+  bounds.origin.y += 10;
 
   s_bitmap_layer = bitmap_layer_create(bounds);
   bitmap_layer_set_compositing_mode(s_bitmap_layer, GCompOpSet);
