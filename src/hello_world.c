@@ -152,11 +152,11 @@ static void load_sequence() {
   // Create 
   if(shinyAlly)
   {
-    s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_CHARIZARD_BACK);
+    s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ALLY_POKEMON_SHINY);
   }
   else
   {
-    s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_CHARIZARD_NORM);
+    s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ALLY_POKEMON);
   }
   
   // Create GBitmap
@@ -178,7 +178,7 @@ static void load_e_sequence() {
   }
 
   // Create 
-  e_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_BLASTOISE);
+  e_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ENEMY_POKEMON);
 
   // Create GBitmap
   e_bitmap = gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(e_sequence), GBitmapFormat8Bit);

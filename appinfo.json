@@ -9,6 +9,30 @@
     "resources": {
         "media": [
             {
+                "file": "data/blastoise.png",
+                "name": "ENEMY_POKEMON",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
+                "file": "data/shiny_charizard_back.png",
+                "name": "ALLY_POKEMON_SHINY",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
+                "file": "data/charizard_back.png",
+                "name": "ALLY_POKEMON",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
                 "file": "images/menu.png",
                 "menuIcon": true,
                 "name": "MENU",
@@ -32,14 +56,6 @@
                     "basalt"
                 ],
                 "type": "png"
-            },
-            {
-                "file": "data/009.png",
-                "name": "BLASTOISE",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "raw"
             },
             {
                 "characterRegex": "[0-9]",
@@ -75,22 +91,6 @@
                     "basalt"
                 ],
                 "type": "font"
-            },
-            {
-                "file": "data/006.png",
-                "name": "CHARIZARD_NORM",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "raw"
-            },
-            {
-                "file": "data/006b.png",
-                "name": "CHARIZARD_BACK",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "raw"
             },
             {
                 "file": "images/paralysis.png",
