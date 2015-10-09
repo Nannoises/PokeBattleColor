@@ -494,6 +494,7 @@ static void main_window_load(Window *window) {
 
 static void main_window_unload(Window *window) {
   bitmap_layer_destroy(s_bitmap_layer);
+  bitmap_layer_destroy(e_bitmap_layer);
 }
 
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
