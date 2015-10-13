@@ -69,7 +69,7 @@ static int step_goal = 8000;
 static GFont *level_font;
 int level_int = 1;					
 
-static char level_string[3];
+static char level_string[10];
 TextLayer *text_level_ally_layer;	
 TextLayer *text_level_enemy_layer;	
 
