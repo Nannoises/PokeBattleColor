@@ -187,6 +187,13 @@ static void load_e_sequence() {
   app_timer_register(1, e_timer_handler, NULL);
 }
 
+void update_level_text()
+{
+  snprintf(level_string, sizeof(level_string), " %d", level_int);
+	text_layer_set_text(text_level_enemy_layer, level_string);  
+  text_layer_set_text(text_level_ally_layer, level_string);
+}
+
 void pedometer_update() {
 	if (startedSession) {
 		X_DELTA_TEMP = abs(abs(currX) - abs(lastX));
@@ -228,9 +235,7 @@ void pedometer_update() {
     if(percentStepGoal > 0 && percentStepGoal != level_int && level_int < 100)
     {      
       level_int = percentStepGoal;      
-      snprintf(level_string, sizeof(level_string), " %d", level_int);
-	    text_layer_set_text(text_level_enemy_layer, level_string);  
-	    text_layer_set_text(text_level_ally_layer, level_string);
+      update_level_text();
       if(level_int == 100)
       {
         shinyAlly = true;
@@ -461,9 +466,7 @@ static void load_level_text_layers(Layer *window_layer)
  	text_layer_set_font(text_level_ally_layer, level_font);
  	layer_add_child(window_layer, text_layer_get_layer(text_level_ally_layer));
   
-  snprintf(level_string, sizeof(level_string), " %d", level_int);
-  text_layer_set_text(text_level_enemy_layer, level_string);  
-  text_layer_set_text(text_level_ally_layer, level_string);
+  update_level_text();
 }
 
 static void main_window_load(Window *window) {
@@ -518,6 +521,7 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
   {
       step_count = 0;
       level_int = 1;
+      update_level_text();
       shinyAlly = false;
       load_sequence();
   }
