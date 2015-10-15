@@ -40,12 +40,40 @@ static bool initiate_watchface = true;
 
 #define NUM_LEVEL_PKEY  0
 #define NUM_LEVEL_FRESH 5
+
+int	X_DELTA = 35;
+int	Y_DELTA = 185;
+int	Z_DELTA = 185;
+int YZ_DELTA_MIN = 175;
+int	YZ_DELTA_MAX = 195; 
+
+// Timer used to determine next step check
+static AppTimer *timer;
+
+// interval to check for next step (in ms)
+const int ACCEL_STEP_MS = 500;
+// value to auto adjust step acceptance 
+const int PED_ADJUST = 2;
+
+int X_DELTA_TEMP, Y_DELTA_TEMP, Z_DELTA_TEMP = 0;
+int lastX, lastY, lastZ, currX, currY, currZ = 0;
+bool validX, validY, validZ = false;
+#define STEP_COUNT_PKEY 1
+
+int step_count = 0;
+bool startedSession = false;
+bool did_pebble_vibrate = false;
+
+static int step_goal = 8000;
   
 static GFont *level_font;
-int level_int = 5;					
-const char level_text;				
+int level_int = 1;					
+
+static char level_string[10];
 TextLayer *text_level_ally_layer;	
 TextLayer *text_level_enemy_layer;	
+
+#define LAST_DAY_SEEN_PKEY 2
 
 static void timer_handler(void *context) {
   uint32_t next_delay;
@@ -85,6 +113,31 @@ static void e_timer_handler(void *context) {
   }
 }
 
+void autoCorrectZ(){
+	if (Z_DELTA > YZ_DELTA_MAX){
+		Z_DELTA = YZ_DELTA_MAX; 
+	} else if (Z_DELTA < YZ_DELTA_MIN){
+		Z_DELTA = YZ_DELTA_MIN;
+	}
+}
+
+void autoCorrectY(){
+	if (Y_DELTA > YZ_DELTA_MAX){
+		Y_DELTA = YZ_DELTA_MAX; 
+	} else if (Y_DELTA < YZ_DELTA_MIN){
+		Y_DELTA = YZ_DELTA_MIN;
+	}
+}
+
+void resetUpdate() {
+	lastX = currX;
+	lastY = currY;
+	lastZ = currZ;
+	validX = false;
+	validY = false;
+	validZ = false;
+}
+
 static void load_sequence() {
   // Free old data
   if(s_sequence) {
@@ -94,10 +147,17 @@ static void load_sequence() {
   if(s_bitmap) {
     gbitmap_destroy(s_bitmap);
     s_bitmap = NULL;
+  }    
+
+  // Create 
+  if(shinyAlly)
+  {
+    s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ALLY_POKEMON_SHINY);
   }
-
-
-  s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_CHARIZARD_NORM);  
+  else
+  {
+    s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ALLY_POKEMON);
+  }
   
   // Create GBitmap
   s_bitmap = gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(s_sequence), GBitmapFormat8Bit);
@@ -118,20 +178,94 @@ static void load_e_sequence() {
   }
 
   // Create 
-  if(shinyAlly)
-  {
-    e_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_FLOON_SHINY);
-  }
-  else
-  {
-    e_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_BLASTOISE);  
-  }
+  e_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ENEMY_POKEMON);
 
   // Create GBitmap
   e_bitmap = gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(e_sequence), GBitmapFormat8Bit);
 
   // Begin animation
   app_timer_register(1, e_timer_handler, NULL);
+}
+
+void update_level_text()
+{
+  snprintf(level_string, sizeof(level_string), " %d", level_int);
+	text_layer_set_text(text_level_enemy_layer, level_string);  
+  text_layer_set_text(text_level_ally_layer, level_string);
+}
+
+void pedometer_update() {
+	if (startedSession) {
+		X_DELTA_TEMP = abs(abs(currX) - abs(lastX));
+		if (X_DELTA_TEMP >= X_DELTA) {
+			validX = true;
+		}
+		Y_DELTA_TEMP = abs(abs(currY) - abs(lastY));
+		if (Y_DELTA_TEMP >= Y_DELTA) {
+			validY = true;
+			if (Y_DELTA_TEMP - Y_DELTA > 200){
+				autoCorrectY();
+				Y_DELTA = (Y_DELTA < YZ_DELTA_MAX) ? Y_DELTA + PED_ADJUST : Y_DELTA;
+			} else if (Y_DELTA - Y_DELTA_TEMP > 175){
+				autoCorrectY();
+				Y_DELTA = (Y_DELTA > YZ_DELTA_MIN) ? Y_DELTA - PED_ADJUST : Y_DELTA;
+			}
+		}
+		Z_DELTA_TEMP = abs(abs(currZ) - abs(lastZ));
+		if (abs(abs(currZ) - abs(lastZ)) >= Z_DELTA) {
+			validZ = true;
+			if (Z_DELTA_TEMP - Z_DELTA > 200){
+				autoCorrectZ();
+				Z_DELTA = (Z_DELTA < YZ_DELTA_MAX) ? Z_DELTA + PED_ADJUST : Z_DELTA;
+			} else if (Z_DELTA - Z_DELTA_TEMP > 175){
+				autoCorrectZ();
+				Z_DELTA = (Z_DELTA < YZ_DELTA_MAX) ? Z_DELTA + PED_ADJUST : Z_DELTA;
+			}
+		}
+	} else {
+		startedSession = true;
+	}
+  
+  //Update UI
+  if ((validX && validY && !did_pebble_vibrate) || (validX && validZ && !did_pebble_vibrate)) {
+		step_count++;
+    
+    //update level
+    int percentStepGoal = ((double)step_count / step_goal) * 100;
+    if(percentStepGoal > 0 && percentStepGoal != level_int && level_int < 100)
+    {      
+      level_int = percentStepGoal;      
+      update_level_text();
+      if(level_int == 100)
+      {
+        shinyAlly = true;
+        load_sequence();
+      }
+    }
+  }  
+  
+  resetUpdate();
+}
+
+static void step_timer_callback(void *data) {
+	AccelData accel = (AccelData ) { .x = 0, .y = 0, .z = 0 };
+	accel_service_peek(&accel);
+
+	if (!startedSession) {
+		lastX = accel.x;
+		lastY = accel.y;
+		lastZ = accel.z;
+	} else {
+		currX = accel.x;
+		currY = accel.y;
+		currZ = accel.z;
+	}
+	
+	did_pebble_vibrate = accel.did_vibrate;
+
+	pedometer_update();	
+	
+	timer = app_timer_register(ACCEL_STEP_MS, step_timer_callback, NULL);
 }
 
 static void load_time_text_layer(Layer *window_layer)
@@ -162,21 +296,21 @@ static void load_pokemon_name_layers(Layer *window_layer)
  	text_layer_set_background_color(ally_pokemon_name_layer, GColorClear);
   text_layer_set_font(ally_pokemon_name_layer, pokemon_name_font);
  	layer_add_child(window_layer, text_layer_get_layer(ally_pokemon_name_layer));
-  text_layer_set_text(ally_pokemon_name_layer, "TOGEPI");
+  text_layer_set_text(ally_pokemon_name_layer, "CHARIZARD");
   
   enemy_pokemon_name_layer = text_layer_create(GRect(5,2,120,12));
   text_layer_set_text_color(enemy_pokemon_name_layer, GColorBlack);
  	text_layer_set_background_color(enemy_pokemon_name_layer, GColorClear);
   text_layer_set_font(enemy_pokemon_name_layer, pokemon_name_font);
  	layer_add_child(window_layer, text_layer_get_layer(enemy_pokemon_name_layer));
-  text_layer_set_text(enemy_pokemon_name_layer, "DRIFLOON");
+  text_layer_set_text(enemy_pokemon_name_layer, "BLASTOISE");
 }
 
 static void load_ally_pokemon_layer(Layer *window_layer)
 {
   GRect bounds = layer_get_bounds(window_layer);  
-  bounds.origin.x -= 50;
-  bounds.origin.y += 15;
+  bounds.origin.x -= 45;
+  bounds.origin.y += 10;
 
   s_bitmap_layer = bitmap_layer_create(bounds);
   bitmap_layer_set_compositing_mode(s_bitmap_layer, GCompOpSet);
@@ -331,6 +465,8 @@ static void load_level_text_layers(Layer *window_layer)
  	text_layer_set_background_color(text_level_ally_layer, GColorClear);
  	text_layer_set_font(text_level_ally_layer, level_font);
  	layer_add_child(window_layer, text_layer_get_layer(text_level_ally_layer));
+  
+  update_level_text();
 }
 
 static void main_window_load(Window *window) {
@@ -361,13 +497,13 @@ static void main_window_load(Window *window) {
 
 static void main_window_unload(Window *window) {
   bitmap_layer_destroy(s_bitmap_layer);
+  bitmap_layer_destroy(e_bitmap_layer);
 }
 
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
 {    
  	static char time_text[] = "00:00";
- 	static char date_text[] = "Xxx,00.00.";
-  static char level_string[100]; //define length of string used to display int 'level_int'
+ 	static char date_text[] = "Xxx,00.00.";  
 
  	char *time_format;
  	char *date_format;
@@ -379,38 +515,17 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
  	strftime(date_text, sizeof(date_text), date_format, tick_time);  
   if (time_text[0] == '0') {
    		memmove(time_text, &time_text[1], sizeof(time_text) - 1);
-	}
+	}  
   
-  if(tick_time->tm_min == 0 && !initiate_watchface)
+  if(!initiate_watchface && tick_time->tm_min == 0 && tick_time->tm_hour == 0)
   {
-    if(tick_time->tm_hour == 17)
-    {
-      shinyAlly = true;
-      load_e_sequence();
-    }
-    else if(tick_time->tm_hour == 0)
-    {
+      step_count = 0;
+      level_int = 1;
+      update_level_text();
       shinyAlly = false;
-      load_e_sequence();
-    }
+      load_sequence();
   }
   
-  // LEVEL TEXT	
-  if(initiate_watchface)
-  {
-    snprintf(level_string, sizeof(level_string), " %d", level_int); 
-		text_layer_set_text(text_level_enemy_layer, level_string);
-		text_layer_set_text(text_level_ally_layer, level_string);
-  }
-  else if ((tick_time->tm_min == 0) && (tick_time->tm_sec == 0)) {
-		level_int++;
-   	APP_LOG(APP_LOG_LEVEL_DEBUG, "+1 [level] added! :)");
-	  snprintf(level_string, sizeof(level_string), " %d", level_int);
-	  text_layer_set_text(text_level_enemy_layer, level_string);  
-	  text_layer_set_text(text_level_ally_layer, level_string);
-
-    APP_LOG(APP_LOG_LEVEL_INFO, "current level = %d", level_int);
-  }
   hour_progression = ((1 - (double)tick_time->tm_min / 60)) * 100;
   layer_mark_dirty(hour_progression_layer);
   
@@ -472,9 +587,28 @@ void handle_init(void) {
   time_t now = time(NULL);
  	struct tm *tick_time = localtime(&now);
     
-  if(tick_time->tm_hour >= 17)
+  int last_day_seen = persist_exists(LAST_DAY_SEEN_PKEY) ? persist_read_int(LAST_DAY_SEEN_PKEY) : 0;  
+  
+  //Different day since last boot
+  if(last_day_seen != tick_time->tm_yday)
   {
-    shinyAlly = true;  
+    step_count = 0;
+    persist_write_int(LAST_DAY_SEEN_PKEY, tick_time->tm_yday);
+  }
+  else
+  {
+    step_count = persist_exists(STEP_COUNT_PKEY) ? persist_read_int(STEP_COUNT_PKEY) : 0;
+  }
+  
+  int percentStepGoal = ((double)step_count / step_goal) * 100;
+  if(percentStepGoal >= 100)
+  {    
+    shinyAlly = true;
+    level_int = 100;
+  }
+  else if(percentStepGoal > 0)
+  {
+    level_int = percentStepGoal;
   }
   
 	// Create a window 
@@ -483,11 +617,11 @@ void handle_init(void) {
   window_set_window_handlers(window, (WindowHandlers) {
     .load = main_window_load,
     .unload = main_window_unload,
-  });
+  });   
 
 	// Push the window
-	window_stack_push(window, true);	
-  
+	window_stack_push(window, true); 
+
 	handle_minute_tick(tick_time, MINUTE_UNIT);
  	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);  
   
@@ -500,9 +634,8 @@ void handle_init(void) {
   app_focus_service_subscribe(handle_focus);
   app_timer_register(10000, stop_animation, NULL);
   
-	// Get the count from persistent storage for use if it exists, otherwise use the default
-  level_int = persist_exists(NUM_LEVEL_PKEY) ? persist_read_int(NUM_LEVEL_PKEY) : NUM_LEVEL_FRESH;
-  APP_LOG(APP_LOG_LEVEL_INFO, "level status of %d restored!", level_int);  
+  //Start pedometer timer
+  timer = app_timer_register(ACCEL_STEP_MS, step_timer_callback, NULL);
   
 	// App Logging!
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Just pushed a window!");
@@ -512,13 +645,16 @@ void handle_init(void) {
 
 void handle_deinit(void) {
 	// TODO destroy stuff
+  app_timer_cancel(timer);  
   
 	// Destroy the window
 	window_destroy(window);
   
-  // Save the count into persistent storage on app exit
-  persist_write_int(NUM_LEVEL_PKEY, level_int);
-  APP_LOG(APP_LOG_LEVEL_INFO, "level status of %d saved!", level_int);
+  time_t now = time(NULL);
+ 	struct tm *tick_time = localtime(&now);
+   
+  persist_write_int(LAST_DAY_SEEN_PKEY, tick_time->tm_yday);
+  persist_write_int(STEP_COUNT_PKEY, step_count);
 }
 
 int main(void) {

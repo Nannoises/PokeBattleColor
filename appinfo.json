@@ -9,33 +9,8 @@
     "resources": {
         "media": [
             {
-                "file": "data/425s.png",
-                "name": "FLOON_SHINY",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "raw"
-            },
-            {
-                "file": "data/425.png",
-                "name": "BLASTOISE",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "raw"
-            },
-            {
-                "file": "data/175.png",
-                "name": "CHARIZARD_NORM",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "raw"
-            },
-            {
-                "file": "images/menu.png",
-                "menuIcon": true,
-                "name": "MENU",
+                "file": "images/sleep.png",
+                "name": "STATUS_SLEEP",
                 "targetPlatforms": [
                     "basalt"
                 ],
@@ -50,8 +25,8 @@
                 "type": "png"
             },
             {
-                "file": "images/sleep.png",
-                "name": "STATUS_SLEEP",
+                "file": "images/colorBackground.png",
+                "name": "BACKGROUND",
                 "targetPlatforms": [
                     "basalt"
                 ],
@@ -93,8 +68,33 @@
                 "type": "font"
             },
             {
-                "file": "images/colorBackground.png",
-                "name": "BACKGROUND",
+                "file": "data/blastoise.png",
+                "name": "ENEMY_POKEMON",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
+                "file": "data/shiny_charizard_back.png",
+                "name": "ALLY_POKEMON_SHINY",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
+                "file": "data/charizard_back.png",
+                "name": "ALLY_POKEMON",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
+                "file": "images/menu.png",
+                "menuIcon": true,
+                "name": "MENU",
                 "targetPlatforms": [
                     "basalt"
                 ],
