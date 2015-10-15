@@ -11,12 +11,12 @@ static GBitmapSequence *e_sequence = NULL;
 static bool animate = true;
 static bool shinyAlly = false;
 
-static GFont *time_font;
-static GFont *date_font;
+static GFont time_font;
+static GFont date_font;
 TextLayer *text_time_layer;
 TextLayer *text_date_layer;
 
-static GFont *pokemon_name_font;
+static GFont pokemon_name_font;
 TextLayer *ally_pokemon_name_layer;
 TextLayer *enemy_pokemon_name_layer;
 
@@ -66,7 +66,7 @@ bool did_pebble_vibrate = false;
 
 static int step_goal = 8000;
   
-static GFont *level_font;
+static GFont level_font;
 int level_int = 1;					
 
 static char level_string[10];
@@ -149,15 +149,7 @@ static void load_sequence() {
     s_bitmap = NULL;
   }    
 
-  // Create 
-  if(shinyAlly)
-  {
-    s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ALLY_POKEMON_SHINY);
-  }
-  else
-  {
-    s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ALLY_POKEMON);
-  }
+  s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ALLY_POKEMON);
   
   // Create GBitmap
   s_bitmap = gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(s_sequence), GBitmapFormat8Bit);
@@ -178,7 +170,14 @@ static void load_e_sequence() {
   }
 
   // Create 
-  e_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ENEMY_POKEMON);
+  if(shinyAlly)
+  {
+    e_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ALLY_POKEMON_SHINY);
+  }
+  else
+  {
+    e_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ENEMY_POKEMON);    
+  }
 
   // Create GBitmap
   e_bitmap = gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(e_sequence), GBitmapFormat8Bit);
@@ -239,7 +238,7 @@ void pedometer_update() {
       if(level_int == 100)
       {
         shinyAlly = true;
-        load_sequence();
+        load_e_sequence();
       }
     }
   }  
@@ -296,14 +295,14 @@ static void load_pokemon_name_layers(Layer *window_layer)
  	text_layer_set_background_color(ally_pokemon_name_layer, GColorClear);
   text_layer_set_font(ally_pokemon_name_layer, pokemon_name_font);
  	layer_add_child(window_layer, text_layer_get_layer(ally_pokemon_name_layer));
-  text_layer_set_text(ally_pokemon_name_layer, "CHARIZARD");
+  text_layer_set_text(ally_pokemon_name_layer, "TOGEPI");
   
   enemy_pokemon_name_layer = text_layer_create(GRect(5,2,120,12));
   text_layer_set_text_color(enemy_pokemon_name_layer, GColorBlack);
  	text_layer_set_background_color(enemy_pokemon_name_layer, GColorClear);
   text_layer_set_font(enemy_pokemon_name_layer, pokemon_name_font);
  	layer_add_child(window_layer, text_layer_get_layer(enemy_pokemon_name_layer));
-  text_layer_set_text(enemy_pokemon_name_layer, "BLASTOISE");
+  text_layer_set_text(enemy_pokemon_name_layer, "DRIFLOON");
 }
 
 static void load_ally_pokemon_layer(Layer *window_layer)
@@ -523,7 +522,7 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
       level_int = 1;
       update_level_text();
       shinyAlly = false;
-      load_sequence();
+      load_e_sequence();
   }
   
   hour_progression = ((1 - (double)tick_time->tm_min / 60)) * 100;
