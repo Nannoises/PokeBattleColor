@@ -40,6 +40,9 @@ static bool initiate_watchface = true;
 
 #define NUM_LEVEL_PKEY  0
 #define NUM_LEVEL_FRESH 5
+char *ALLY_POKEMON_NAME = "CHARIZARD";
+char *ENEMY_POKEMON_NAME = "BLASTOISE";
+
 
 int	X_DELTA = 35;
 int	Y_DELTA = 185;
@@ -296,14 +299,14 @@ static void load_pokemon_name_layers(Layer *window_layer)
  	text_layer_set_background_color(ally_pokemon_name_layer, GColorClear);
   text_layer_set_font(ally_pokemon_name_layer, pokemon_name_font);
  	layer_add_child(window_layer, text_layer_get_layer(ally_pokemon_name_layer));
-  text_layer_set_text(ally_pokemon_name_layer, "CHARIZARD");
+  text_layer_set_text(ally_pokemon_name_layer, ALLY_POKEMON_NAME);
   
   enemy_pokemon_name_layer = text_layer_create(GRect(5,2,120,12));
   text_layer_set_text_color(enemy_pokemon_name_layer, GColorBlack);
  	text_layer_set_background_color(enemy_pokemon_name_layer, GColorClear);
   text_layer_set_font(enemy_pokemon_name_layer, pokemon_name_font);
  	layer_add_child(window_layer, text_layer_get_layer(enemy_pokemon_name_layer));
-  text_layer_set_text(enemy_pokemon_name_layer, "BLASTOISE");
+  text_layer_set_text(enemy_pokemon_name_layer, ENEMY_POKEMON_NAME);
 }
 
 static void load_ally_pokemon_layer(Layer *window_layer)
