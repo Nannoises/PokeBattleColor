@@ -9,7 +9,7 @@
     "resources": {
         "media": [
             {
-                "file": "data/425.png",
+                "file": "data/009.png",
                 "name": "ENEMY_POKEMON",
                 "targetPlatforms": [
                     "basalt"
@@ -17,7 +17,7 @@
                 "type": "raw"
             },
             {
-                "file": "data/425s.png",
+                "file": "data/006b.png",
                 "name": "ALLY_POKEMON_SHINY",
                 "targetPlatforms": [
                     "basalt"
@@ -25,7 +25,7 @@
                 "type": "raw"
             },
             {
-                "file": "data/175.png",
+                "file": "data/006.png",
                 "name": "ALLY_POKEMON",
                 "targetPlatforms": [
                     "basalt"
