@@ -9,6 +9,30 @@
     "resources": {
         "media": [
             {
+                "file": "data/425.png",
+                "name": "ENEMY_POKEMON",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
+                "file": "data/425s.png",
+                "name": "ALLY_POKEMON_SHINY",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
+                "file": "data/175.png",
+                "name": "ALLY_POKEMON",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
                 "file": "images/sleep.png",
                 "name": "STATUS_SLEEP",
                 "targetPlatforms": [
@@ -66,30 +90,6 @@
                     "basalt"
                 ],
                 "type": "font"
-            },
-            {
-                "file": "data/blastoise.png",
-                "name": "ENEMY_POKEMON",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "raw"
-            },
-            {
-                "file": "data/shiny_charizard_back.png",
-                "name": "ALLY_POKEMON_SHINY",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "raw"
-            },
-            {
-                "file": "data/charizard_back.png",
-                "name": "ALLY_POKEMON",
-                "targetPlatforms": [
-                    "basalt"
-                ],
-                "type": "raw"
             },
             {
                 "file": "images/menu.png",
