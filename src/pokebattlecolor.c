@@ -38,8 +38,6 @@ static BitmapLayer *ally_status_par_layer;
 
 static bool initiate_watchface = true;
 
-#define NUM_LEVEL_PKEY  0
-#define NUM_LEVEL_FRESH 5
 char *ALLY_POKEMON_NAME = "CHARIZARD";
 char *ENEMY_POKEMON_NAME = "BLASTOISE";
 
@@ -61,13 +59,10 @@ const int PED_ADJUST = 2;
 int X_DELTA_TEMP, Y_DELTA_TEMP, Z_DELTA_TEMP = 0;
 int lastX, lastY, lastZ, currX, currY, currZ = 0;
 bool validX, validY, validZ = false;
-#define STEP_COUNT_PKEY 1
 
 int step_count = 0;
 bool startedSession = false;
 bool did_pebble_vibrate = false;
-
-static int step_goal = 8000;
   
 static GFont level_font;
 int level_int = 1;					
@@ -75,8 +70,6 @@ int level_int = 1;
 static char level_string[10];
 TextLayer *text_level_ally_layer;	
 TextLayer *text_level_enemy_layer;	
-
-#define LAST_DAY_SEEN_PKEY 2
 
 static void timer_handler(void *context) {
   uint32_t next_delay;
@@ -114,31 +107,6 @@ static void e_timer_handler(void *context) {
     // Start again
     gbitmap_sequence_restart(e_sequence);
   }
-}
-
-void autoCorrectZ(){
-	if (Z_DELTA > YZ_DELTA_MAX){
-		Z_DELTA = YZ_DELTA_MAX; 
-	} else if (Z_DELTA < YZ_DELTA_MIN){
-		Z_DELTA = YZ_DELTA_MIN;
-	}
-}
-
-void autoCorrectY(){
-	if (Y_DELTA > YZ_DELTA_MAX){
-		Y_DELTA = YZ_DELTA_MAX; 
-	} else if (Y_DELTA < YZ_DELTA_MIN){
-		Y_DELTA = YZ_DELTA_MIN;
-	}
-}
-
-void resetUpdate() {
-	lastX = currX;
-	lastY = currY;
-	lastZ = currZ;
-	validX = false;
-	validY = false;
-	validZ = false;
 }
 
 static void load_sequence() {
@@ -197,80 +165,6 @@ void update_level_text()
   text_layer_set_text(text_level_ally_layer, level_string);
 }
 
-void pedometer_update() {
-	if (startedSession) {
-		X_DELTA_TEMP = abs(abs(currX) - abs(lastX));
-		if (X_DELTA_TEMP >= X_DELTA) {
-			validX = true;
-		}
-		Y_DELTA_TEMP = abs(abs(currY) - abs(lastY));
-		if (Y_DELTA_TEMP >= Y_DELTA) {
-			validY = true;
-			if (Y_DELTA_TEMP - Y_DELTA > 200){
-				autoCorrectY();
-				Y_DELTA = (Y_DELTA < YZ_DELTA_MAX) ? Y_DELTA + PED_ADJUST : Y_DELTA;
-			} else if (Y_DELTA - Y_DELTA_TEMP > 175){
-				autoCorrectY();
-				Y_DELTA = (Y_DELTA > YZ_DELTA_MIN) ? Y_DELTA - PED_ADJUST : Y_DELTA;
-			}
-		}
-		Z_DELTA_TEMP = abs(abs(currZ) - abs(lastZ));
-		if (abs(abs(currZ) - abs(lastZ)) >= Z_DELTA) {
-			validZ = true;
-			if (Z_DELTA_TEMP - Z_DELTA > 200){
-				autoCorrectZ();
-				Z_DELTA = (Z_DELTA < YZ_DELTA_MAX) ? Z_DELTA + PED_ADJUST : Z_DELTA;
-			} else if (Z_DELTA - Z_DELTA_TEMP > 175){
-				autoCorrectZ();
-				Z_DELTA = (Z_DELTA < YZ_DELTA_MAX) ? Z_DELTA + PED_ADJUST : Z_DELTA;
-			}
-		}
-	} else {
-		startedSession = true;
-	}
-  
-  //Update UI
-  if ((validX && validY && !did_pebble_vibrate) || (validX && validZ && !did_pebble_vibrate)) {
-		step_count++;
-    
-    //update level
-    int percentStepGoal = ((double)step_count / step_goal) * 100;
-    if(percentStepGoal > 0 && percentStepGoal != level_int && level_int < 100)
-    {      
-      level_int = percentStepGoal;      
-      update_level_text();
-      if(level_int == 100)
-      {
-        shinyAlly = true;
-        load_sequence();
-      }
-    }
-  }  
-  
-  resetUpdate();
-}
-
-static void step_timer_callback(void *data) {
-	AccelData accel = (AccelData ) { .x = 0, .y = 0, .z = 0 };
-	accel_service_peek(&accel);
-
-	if (!startedSession) {
-		lastX = accel.x;
-		lastY = accel.y;
-		lastZ = accel.z;
-	} else {
-		currX = accel.x;
-		currY = accel.y;
-		currZ = accel.z;
-	}
-	
-	did_pebble_vibrate = accel.did_vibrate;
-
-	pedometer_update();	
-	
-	timer = app_timer_register(ACCEL_STEP_MS, step_timer_callback, NULL);
-}
-
 static void load_time_text_layer(Layer *window_layer)
 {
   text_time_layer = text_layer_create(GRect(12, 132, 124, 30));
@@ -283,7 +177,7 @@ static void load_time_text_layer(Layer *window_layer)
 
 static void load_date_text_layer(Layer *window_layer)
 {
-  text_date_layer = text_layer_create(GRect(49, 106, 76, 10));	
+  text_date_layer = text_layer_create(GRect(60, 106, 76, 10));	
 	text_layer_set_text_alignment(text_date_layer, GTextAlignmentRight);
  	text_layer_set_text_color(text_date_layer, GColorBlack);
  	text_layer_set_background_color(text_date_layer, GColorClear);
@@ -511,9 +405,9 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
  	char *time_format;
  	char *date_format;
   
-	time_format = "%I:%M";	// 0:00
-	date_format = "%b%e";	// Dec31	
-  
+	time_format = clock_is_24h_style()?"%T":"%I:%M";	// 0:00
+	date_format = "%a,%b%e";	// Fri, Dec31	
+    
   strftime(time_text, sizeof(time_text), time_format, tick_time);
  	strftime(date_text, sizeof(date_text), date_format, tick_time);  
   if (time_text[0] == '0') {
@@ -566,14 +460,6 @@ static void stop_animation()
   animate = false;
 }
 
-static void handle_tap(AccelAxisType axis, int32_t direction)
-{
-  animate = true;
-  app_timer_register(1, timer_handler, NULL);
-  app_timer_register(1, e_timer_handler, NULL);
-  app_timer_register(10000, stop_animation, NULL);
-}
-
 static void handle_focus(bool in_focus)
 {
   animate = true;
@@ -590,20 +476,7 @@ void handle_init(void) {
   time_t now = time(NULL);
  	struct tm *tick_time = localtime(&now);
     
-  int last_day_seen = persist_exists(LAST_DAY_SEEN_PKEY) ? persist_read_int(LAST_DAY_SEEN_PKEY) : 0;  
-  
-  //Different day since last boot
-  if(last_day_seen != tick_time->tm_yday)
-  {
-    step_count = 0;
-    persist_write_int(LAST_DAY_SEEN_PKEY, tick_time->tm_yday);
-  }
-  else
-  {
-    step_count = persist_exists(STEP_COUNT_PKEY) ? persist_read_int(STEP_COUNT_PKEY) : 0;
-  }
-  
-  int percentStepGoal = ((double)step_count / step_goal) * 100;
+  int percentStepGoal = 99; //TODO
   if(percentStepGoal >= 100)
   {    
     shinyAlly = true;
@@ -633,12 +506,8 @@ void handle_init(void) {
   handle_bluetooth(bluetooth_connection_service_peek());
   bluetooth_connection_service_subscribe(&handle_bluetooth);
   
-  accel_tap_service_subscribe(&handle_tap);
   app_focus_service_subscribe(handle_focus);
   app_timer_register(10000, stop_animation, NULL);
-  
-  //Start pedometer timer
-  timer = app_timer_register(ACCEL_STEP_MS, step_timer_callback, NULL);
   
 	// App Logging!
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Just pushed a window!");
@@ -652,12 +521,6 @@ void handle_deinit(void) {
   
 	// Destroy the window
 	window_destroy(window);
-  
-  time_t now = time(NULL);
- 	struct tm *tick_time = localtime(&now);
-   
-  persist_write_int(LAST_DAY_SEEN_PKEY, tick_time->tm_yday);
-  persist_write_int(STEP_COUNT_PKEY, step_count);
 }
 
 int main(void) {
