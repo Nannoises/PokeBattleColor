@@ -40,34 +40,13 @@ static bool initiate_watchface = true;
 
 char *ALLY_POKEMON_NAME = "CHARIZARD";
 char *ENEMY_POKEMON_NAME = "BLASTOISE";
-
-
-int	X_DELTA = 35;
-int	Y_DELTA = 185;
-int	Z_DELTA = 185;
-int YZ_DELTA_MIN = 175;
-int	YZ_DELTA_MAX = 195; 
-
-// Timer used to determine next step check
-static AppTimer *timer;
-
-// interval to check for next step (in ms)
-const int ACCEL_STEP_MS = 500;
-// value to auto adjust step acceptance 
-const int PED_ADJUST = 2;
-
-int X_DELTA_TEMP, Y_DELTA_TEMP, Z_DELTA_TEMP = 0;
-int lastX, lastY, lastZ, currX, currY, currZ = 0;
-bool validX, validY, validZ = false;
-
-int step_count = 0;
-bool startedSession = false;
-bool did_pebble_vibrate = false;
   
 static GFont level_font;
-int level_int = 1;					
+int level_int = 1;
+int level_int_2 = 1;
 
 static char level_string[10];
+static char level_string_2[10];
 TextLayer *text_level_ally_layer;	
 TextLayer *text_level_enemy_layer;	
 
@@ -161,7 +140,8 @@ static void load_e_sequence() {
 void update_level_text()
 {
   snprintf(level_string, sizeof(level_string), " %d", level_int);
-	text_layer_set_text(text_level_enemy_layer, level_string);  
+  snprintf(level_string_2, sizeof(level_string_2), " %d", level_int_2);
+	text_layer_set_text(text_level_enemy_layer, level_string_2);  
   text_layer_set_text(text_level_ally_layer, level_string);
 }
 
@@ -397,6 +377,62 @@ static void main_window_unload(Window *window) {
   bitmap_layer_destroy(e_bitmap_layer);
 }
 
+static void set_health_stats(){  
+  HealthMetric metric = HealthMetricStepCount;
+  time_t start = time_start_of_today();
+  time_t end = time(NULL);
+  int stepsToday = 0;
+  int averageStepsByNow = 1;
+  
+  // Check the metric has data available for today
+  HealthServiceAccessibilityMask mask = health_service_metric_accessible(metric, 
+    start, end);
+  
+  if(mask & HealthServiceAccessibilityMaskAvailable) {
+    // Data is available!    
+    stepsToday = (int)health_service_sum_today(metric);
+    APP_LOG(APP_LOG_LEVEL_INFO, "Steps today: %d", stepsToday);
+  } else {
+    // No data recorded yet today
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Data unavailable!");
+  }   
+  
+  // Define query parameters
+  const HealthServiceTimeScope scope = HealthServiceTimeScopeWeekly;
+   
+  // Check that an averaged value is accessible
+  mask = health_service_metric_averaged_accessible(metric, start, end, scope);
+  if(mask & HealthServiceAccessibilityMaskAvailable) {
+    // Average is available, read it
+    HealthValue average = health_service_sum_averaged(metric, start, end, scope);    
+    averageStepsByNow = (int)average;
+    APP_LOG(APP_LOG_LEVEL_INFO, "Average step count: %d steps", averageStepsByNow);
+  }
+  
+  int percentStepGoal = ((double) stepsToday / averageStepsByNow) * 100;
+  level_int_2 = 100; //TODO change?
+  if(percentStepGoal >= 100)
+  {        
+    level_int = 100;
+    if(!shinyAlly){
+      shinyAlly = true;
+      load_sequence();
+    }
+  }
+  else if(percentStepGoal > 0)
+  {
+    level_int = percentStepGoal;
+    if(shinyAlly){
+      shinyAlly = false;
+      load_sequence();
+    }
+  }
+  update_level_text();
+  
+  hour_progression = ((1 - (double)stepsToday / averageStepsByNow)) * 100;
+  layer_mark_dirty(hour_progression_layer);
+}
+
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
 {    
  	static char time_text[] = "00:00";
@@ -414,21 +450,11 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
   if (time_text[0] == '0') {
    		memmove(time_text, &time_text[1], sizeof(time_text) - 1);
 	}  
-  
-  if(!initiate_watchface && tick_time->tm_min == 0 && tick_time->tm_hour == 0)
-  {
-      step_count = 0;
-      level_int = 1;
-      update_level_text();
-      shinyAlly = false;
-      load_sequence();
-  }
-  
-  hour_progression = ((1 - (double)tick_time->tm_min / 60)) * 100;
-  layer_mark_dirty(hour_progression_layer);
-  
+
   text_layer_set_text(text_time_layer, time_text);
  	text_layer_set_text(text_date_layer, date_text);
+
+  set_health_stats();
 }
 
 void battery_state_handler(BatteryChargeState charge) {
@@ -476,17 +502,6 @@ void handle_init(void) {
   
   time_t now = time(NULL);
  	struct tm *tick_time = localtime(&now);
-    
-  int percentStepGoal = 99; //TODO
-  if(percentStepGoal >= 100)
-  {    
-    shinyAlly = true;
-    level_int = 100;
-  }
-  else if(percentStepGoal > 0)
-  {
-    level_int = percentStepGoal;
-  }
   
 	// Create a window 
   window = window_create();
@@ -517,9 +532,6 @@ void handle_init(void) {
 }
 
 void handle_deinit(void) {
-	// TODO destroy stuff
-  app_timer_cancel(timer);  
-  
 	// Destroy the window
 	window_destroy(window);
 }
