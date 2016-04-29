@@ -405,9 +405,10 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
  	char *time_format;
  	char *date_format;
   
+	time_format = clock_is_24h_style()?"%T":"%I:%M";	// 0:00
 	date_format = "%a,%b%e";	// Fri, Dec31	
     
-  clock_copy_time_string(time_text, sizeof(time_text));
+  strftime(time_text, sizeof(time_text), time_format, tick_time);
  	strftime(date_text, sizeof(date_text), date_format, tick_time);  
   
   if (time_text[0] == '0') {
