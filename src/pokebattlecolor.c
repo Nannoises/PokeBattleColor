@@ -383,10 +383,10 @@ static void set_health_stats(){
   time_t end = time(NULL);
   int stepsToday = 0;
   int averageStepsByNow = 1;
+  int endOfDayStepGoal = 1;
   
   // Check the metric has data available for today
-  HealthServiceAccessibilityMask mask = health_service_metric_accessible(metric, 
-    start, end);
+  HealthServiceAccessibilityMask mask = health_service_metric_accessible(metric, start, end);
   
   if(mask & HealthServiceAccessibilityMaskAvailable) {
     // Data is available!    
@@ -406,12 +406,29 @@ static void set_health_stats(){
     // Average is available, read it
     HealthValue average = health_service_sum_averaged(metric, start, end, scope);    
     averageStepsByNow = (int)average;
-    APP_LOG(APP_LOG_LEVEL_INFO, "Average step count: %d steps", averageStepsByNow);
+    //APP_LOG(APP_LOG_LEVEL_INFO, "Average step count: %d steps", averageStepsByNow);
+  }
+  
+  mask = health_service_metric_averaged_accessible(metric, start, start + 86399, scope);
+  if(mask & HealthServiceAccessibilityMaskAvailable) {
+    // Average is available, read it
+    HealthValue average = health_service_sum_averaged(metric, start, start + 86399, scope);    
+    endOfDayStepGoal = (int)average;
+    //APP_LOG(APP_LOG_LEVEL_INFO, "Average step count: %d steps", averageStepsByNow);
+  } else{
+    endOfDayStepGoal = 10000;
   }
   
   int percentStepGoal = ((double) stepsToday / averageStepsByNow) * 100;
+  int endOfDayPercentStepGoal = ((double)stepsToday / endOfDayStepGoal) * 100;
+  if(endOfDayPercentStepGoal <= 0){
+    endOfDayPercentStepGoal = 1;
+  }
+  if(percentStepGoal <= 0){
+    percentStepGoal = 1;
+  }
   level_int_2 = 100; //TODO change?
-  if(percentStepGoal >= 100)
+  if(endOfDayPercentStepGoal >= 100)
   {        
     level_int = 100;
     if(!shinyAlly){
@@ -419,9 +436,9 @@ static void set_health_stats(){
       load_sequence();
     }
   }
-  else if(percentStepGoal > 0)
+  else
   {
-    level_int = percentStepGoal;
+    level_int = endOfDayPercentStepGoal;
     if(shinyAlly){
       shinyAlly = false;
       load_sequence();

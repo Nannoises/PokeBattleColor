@@ -1,7 +1,7 @@
 {
     "appKeys": {},
     "capabilities": [
-        ""
+        "health"
     ],
     "companyName": "birdmanherron@gmail.com",
     "enableMultiJS": false,
@@ -109,7 +109,7 @@
         "basalt"
     ],
     "uuid": "2d81b6f1-3a4a-4375-8e51-a978a29648e6",
-    "versionLabel": "1.0",
+    "versionLabel": "1.2",
     "watchapp": {
         "watchface": true
     }
