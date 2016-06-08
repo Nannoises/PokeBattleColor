@@ -175,6 +175,11 @@ static void load_pokemon_name_layers(Layer *window_layer)
  	layer_add_child(window_layer, text_layer_get_layer(ally_pokemon_name_layer));
   text_layer_set_text(ally_pokemon_name_layer, ALLY_POKEMON_NAME);
   
+  if(enemy_pokemon_name_layer){
+    layer_remove_from_parent(text_layer_get_layer(enemy_pokemon_name_layer));
+    layer_destroy(text_layer_get_layer(enemy_pokemon_name_layer));
+  }
+  
   enemy_pokemon_name_layer = text_layer_create(GRect(5,2,120,12));
   text_layer_set_text_color(enemy_pokemon_name_layer, GColorBlack);
  	text_layer_set_background_color(enemy_pokemon_name_layer, GColorClear);
@@ -512,6 +517,20 @@ static void handle_focus(bool in_focus)
   app_timer_register(10000, stop_animation, NULL);
 }
 
+static void inbox_received_handler(DictionaryIterator *iter, void *context) {
+  // Read color preferences
+  Tuple *enemyName = dict_find(iter, MESSAGE_KEY_ENEMYNAME);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "enemyName: ");
+  APP_LOG(APP_LOG_LEVEL_DEBUG, enemyName->value->cstring);
+  if(enemyName) {
+    ENEMY_POKEMON_NAME = enemyName->value->cstring;  
+    APP_LOG(APP_LOG_LEVEL_DEBUG, ENEMY_POKEMON_NAME);
+    text_layer_set_text(enemy_pokemon_name_layer, ENEMY_POKEMON_NAME);
+  } else{
+    text_layer_set_text(enemy_pokemon_name_layer, "NOT FOUND");
+  }
+}
+
 void handle_init(void) {
   time_font  = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TIME_24));
   date_font  = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DATE_7));
@@ -541,6 +560,9 @@ void handle_init(void) {
   
   app_focus_service_subscribe(handle_focus);
   app_timer_register(10000, stop_animation, NULL);
+  
+  app_message_open(256, 256);
+  app_message_register_inbox_received(inbox_received_handler);
   
 	// App Logging!
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Just pushed a window!");
