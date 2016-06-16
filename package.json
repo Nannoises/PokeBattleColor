@@ -14,7 +14,13 @@
             "ENEMYNAME",
             "ALLYNAME",
             "FOCUSANIMATE",
-            "FLICKANIMATE"
+            "FLICKANIMATE",
+            "AppKeyIndex",
+            "AppKeyDataLength",
+            "AppKeyDataChunk",
+            "AppKeyChunkSize",
+            "AppKeyComplete",
+            "AppKeyImageNumber"
         ],
         "projectType": "native",
         "resources": {
@@ -35,14 +41,6 @@
                         "basalt"
                     ],
                     "type": "bitmap"
-                },
-                {
-                    "file": "data/009.png",
-                    "name": "ENEMY_POKEMON",
-                    "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "raw"
                 },
                 {
                     "file": "data/006b.png",
@@ -117,7 +115,7 @@
         "targetPlatforms": [
             "basalt"
         ],
-        "uuid": "3a6e2b67-1aa5-43e4-bcba-f39f06a67b9f",
+        "uuid": "46f9890f-6e26-485c-b8c7-dd30cfdaf61e",
         "watchapp": {
             "watchface": true
         }

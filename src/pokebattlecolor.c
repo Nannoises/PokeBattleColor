@@ -48,7 +48,12 @@ int level_int_2 = 1;
 static char level_string[10];
 static char level_string_2[10];
 TextLayer *text_level_ally_layer;	
-TextLayer *text_level_enemy_layer;	
+TextLayer *text_level_enemy_layer;
+
+static int imageCount = 50;
+static uint8_t *s_img_data[50];
+static int s_img_size[50];
+static int e_imageIndex = 0;
 
 static void timer_handler(void *context) {
   uint32_t next_delay;
@@ -61,30 +66,40 @@ static void timer_handler(void *context) {
     // Timer for that delay
     if(animate)
     {
-      app_timer_register(next_delay, timer_handler, NULL);
+      app_timer_register(1, timer_handler, NULL);
     }
   } else {
     // Start again
     gbitmap_sequence_restart(s_sequence);
   }
 }
+static void load_e_image(int index){
+  if(e_bitmap) {
+    gbitmap_destroy(e_bitmap);    
+  }
+  // Create new GBitmap from downloaded PNG data
+  e_bitmap = gbitmap_create_from_png_data(s_img_data[index], s_img_size[index]);
 
-static void e_timer_handler(void *context) {
-  uint32_t next_delay;
-
-  // Advance to the next APNG frame
-  if(gbitmap_sequence_update_bitmap_next_frame(e_sequence, e_bitmap, &next_delay)) {
+  // Show the image
+  if(e_bitmap) {
     bitmap_layer_set_bitmap(e_bitmap_layer, e_bitmap);
     layer_mark_dirty(bitmap_layer_get_layer(e_bitmap_layer));
-
-    // Timer for that delay
-    if(animate)
-    {
-      app_timer_register(next_delay, e_timer_handler, NULL);
-    }
   } else {
-    // Start again
-    gbitmap_sequence_restart(e_sequence);
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Error creating GBitmap from PNG data!");
+  }
+}
+static void e_timer_handler(void *context) {
+  load_e_image(e_imageIndex);  
+
+  e_imageIndex++;
+  if(e_imageIndex >= imageCount){
+    e_imageIndex = 0;
+  }
+  // Timer for that delay
+  if(animate)
+  {
+      //APP_LOG(APP_LOG_LEVEL_ERROR, "next_delay: %u", next_delay.value);  
+      app_timer_register(100, e_timer_handler, NULL);
   }
 }
 
@@ -118,23 +133,23 @@ static void load_sequence() {
 
 static void load_e_sequence() {   
   // Free old data
-  if(e_sequence) {
+  /*if(e_sequence) {
     gbitmap_sequence_destroy(e_sequence);
     e_sequence = NULL;
-  }
+  }*/
   if(e_bitmap) {
     gbitmap_destroy(e_bitmap);
     e_bitmap = NULL;
   }
 
   // Create 
-  e_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ENEMY_POKEMON);
+  //e_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_TEST_DECOM);
 
   // Create GBitmap
-  e_bitmap = gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(e_sequence), GBitmapFormat8Bit);
+  //e_bitmap = gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(e_sequence), GBitmapFormat8Bit);
 
   // Begin animation
-  app_timer_register(1, e_timer_handler, NULL);
+  //app_timer_register(1, e_timer_handler, NULL);
 }
 
 void update_level_text()
@@ -211,7 +226,7 @@ static void load_enemy_pokemon_layer(Layer *window_layer)
   bitmap_layer_set_compositing_mode(e_bitmap_layer, GCompOpSet);
   layer_add_child(window_layer, bitmap_layer_get_layer(e_bitmap_layer));
   
-  load_e_sequence();
+  //load_e_sequence();
 }
 
 static void load_background_layer(Layer *window_layer)
@@ -509,7 +524,7 @@ static void stop_animation()
   animate = false;
 }
 
-static void handle_focus(bool in_focus)
+static void start_animation()
 {
   animate = true;
   app_timer_register(1, timer_handler, NULL);
@@ -517,17 +532,70 @@ static void handle_focus(bool in_focus)
   app_timer_register(10000, stop_animation, NULL);
 }
 
+static void handle_focus(bool in_focus)
+{
+  start_animation();
+}
+
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   // Read color preferences
   Tuple *enemyName = dict_find(iter, MESSAGE_KEY_ENEMYNAME);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "enemyName: ");
-  APP_LOG(APP_LOG_LEVEL_DEBUG, enemyName->value->cstring);
   if(enemyName) {
-    ENEMY_POKEMON_NAME = enemyName->value->cstring;  
-    APP_LOG(APP_LOG_LEVEL_DEBUG, ENEMY_POKEMON_NAME);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "enemyName: %s", enemyName->value->cstring);
+    strcpy(ENEMY_POKEMON_NAME, enemyName->value->cstring);
+    //ENEMY_POKEMON_NAME = enemyName->value->cstring;      
     text_layer_set_text(enemy_pokemon_name_layer, ENEMY_POKEMON_NAME);
-  } else{
-    text_layer_set_text(enemy_pokemon_name_layer, "NOT FOUND");
+  }
+  int imageIndex;
+  Tuple *image_num;
+  // Get the received image chunk
+  Tuple *img_size_t = dict_find(iter, MESSAGE_KEY_AppKeyDataLength);
+  if(img_size_t) {
+    image_num = dict_find(iter, MESSAGE_KEY_AppKeyImageNumber);
+    imageIndex = image_num->value->int32 -1;
+    s_img_size[imageIndex] = img_size_t->value->int32;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Image %d size: %d", imageIndex + 1, s_img_size[imageIndex]);
+    // Allocate buffer for image data
+    s_img_data[imageIndex] = (uint8_t*)malloc(s_img_size[imageIndex] * sizeof(uint8_t));
+    //e_sequence = (GBitmapSequence*)malloc(s_img_size * sizeof(uint8_t));
+  }
+
+  // An image chunk
+  Tuple *chunk_t = dict_find(iter, MESSAGE_KEY_AppKeyDataChunk);
+  if(chunk_t) {
+    uint8_t *chunk_data = chunk_t->value->data;
+    image_num = dict_find(iter, MESSAGE_KEY_AppKeyImageNumber);
+    imageIndex = image_num->value->int32 -1;
+    
+    Tuple *chunk_size_t = dict_find(iter, MESSAGE_KEY_AppKeyChunkSize);
+    int chunk_size = chunk_size_t->value->int32;
+
+    Tuple *index_t = dict_find(iter, MESSAGE_KEY_AppKeyIndex);
+    int index = index_t->value->int32;
+
+    // Save the chunk
+    memcpy(&s_img_data[imageIndex][index], chunk_data, chunk_size);
+    //memcpy(&e_sequence[index], chunk_data, chunk_size);
+  }
+
+  // Complete?
+  Tuple *complete_t = dict_find(iter, MESSAGE_KEY_AppKeyComplete);
+  if(complete_t) {
+    image_num = dict_find(iter, MESSAGE_KEY_AppKeyImageNumber);
+    imageIndex = image_num->value->int32 -1;
+    // Show the image
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Image %d completely transferred.", imageIndex + 1);
+    
+    if(imageIndex == 0){
+      load_e_image(imageIndex);
+    }
+    else if(imageIndex + 1 == imageCount){
+      start_animation();
+    }
+    //e_sequence = (GBitmapSequence*) s_img_data;
+    //load_e_sequence();
+    //start_animation();
+    //main_window_set_image_data(s_img_data, s_img_size);
   }
 }
 
@@ -561,7 +629,7 @@ void handle_init(void) {
   app_focus_service_subscribe(handle_focus);
   app_timer_register(10000, stop_animation, NULL);
   
-  app_message_open(256, 256);
+  app_message_open(app_message_inbox_size_maximum(), 64);
   app_message_register_inbox_received(inbox_received_handler);
   
 	// App Logging!
