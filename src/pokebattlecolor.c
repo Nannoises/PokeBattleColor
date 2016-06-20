@@ -2,6 +2,7 @@
 
 Window *window;
 static GBitmap *s_bitmap = NULL;
+static GBitmap *e_bitmap = NULL;
 static BitmapLayer *s_bitmap_layer;
 static BitmapLayer *e_bitmap_layer;
 static GBitmapSequence *s_sequence = NULL;
@@ -49,9 +50,10 @@ static char level_string_2[10];
 TextLayer *text_level_ally_layer;	
 TextLayer *text_level_enemy_layer;
 
-static uint8_t *s_img_data;
-static int s_img_size;
-static GBitmap *e_bitmap;
+static int imageCount = 50;
+static uint8_t *s_img_data[50];
+static int s_img_size[50];
+static int e_imageIndex = 0;
 
 static void timer_handler(void *context) {
   uint32_t next_delay;
@@ -71,31 +73,28 @@ static void timer_handler(void *context) {
     gbitmap_sequence_restart(s_sequence);
   }
 }
-static void load_e_image(){
-  if(e_bitmap){    
+static void load_e_image(int index){
+  if(e_bitmap) {
     gbitmap_destroy(e_bitmap);    
-    //free(e_bitmap);
   }
   // Create new GBitmap from downloaded PNG data
-  e_bitmap = gbitmap_create_from_png_data(s_img_data, s_img_size);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "e_bitmap set. Bytes used: %zu Bytes free: %zu", heap_bytes_used(), heap_bytes_free());
-  //APP_LOG(APP_LOG_LEVEL_INFO, "Setting bitmatp to image index %d", index);
+  e_bitmap = gbitmap_create_from_png_data(s_img_data[index], s_img_size[index]);
 
   // Show the image
   if(e_bitmap) {
     bitmap_layer_set_bitmap(e_bitmap_layer, e_bitmap);
     layer_mark_dirty(bitmap_layer_get_layer(e_bitmap_layer));
   } else {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "No GBitmap!");
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Error creating GBitmap from PNG data!");
   }
 }
 static void e_timer_handler(void *context) {
-  load_e_image();  
+  load_e_image(e_imageIndex);  
 
-  //e_imageIndex++;
-  //if(e_imageIndex >= imageCount){
-//    e_imageIndex = 0;
-//  }
+  e_imageIndex++;
+  if(e_imageIndex >= imageCount){
+    e_imageIndex = 0;
+  }
   // Timer for that delay
   if(animate)
   {
@@ -138,10 +137,10 @@ static void load_e_sequence() {
     gbitmap_sequence_destroy(e_sequence);
     e_sequence = NULL;
   }*/
-//if(e_bitmap) {
-//  gbitmap_destroy(e_bitmap);
-//  e_bitmap = NULL;
-//}
+  if(e_bitmap) {
+    gbitmap_destroy(e_bitmap);
+    e_bitmap = NULL;
+  }
 
   // Create 
   //e_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_TEST_DECOM);
@@ -214,7 +213,7 @@ static void load_ally_pokemon_layer(Layer *window_layer)
   bitmap_layer_set_compositing_mode(s_bitmap_layer, GCompOpSet);
   layer_add_child(window_layer, bitmap_layer_get_layer(s_bitmap_layer));
 
-  //load_sequence();
+  load_sequence();
 }
 
 static void load_enemy_pokemon_layer(Layer *window_layer)
@@ -554,11 +553,10 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   if(img_size_t) {
     image_num = dict_find(iter, MESSAGE_KEY_AppKeyImageNumber);
     imageIndex = image_num->value->int32 -1;
-    s_img_size = img_size_t->value->int32;
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Image %d size: %d", imageIndex + 1, s_img_size);
+    s_img_size[imageIndex] = img_size_t->value->int32;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Image %d size: %d", imageIndex + 1, s_img_size[imageIndex]);
     // Allocate buffer for image data
-    //if(s_image_data) destroy(s_image_data);
-    s_img_data = (uint8_t*)malloc(s_img_size * sizeof(uint8_t));
+    s_img_data[imageIndex] = (uint8_t*)malloc(s_img_size[imageIndex] * sizeof(uint8_t));
     //e_sequence = (GBitmapSequence*)malloc(s_img_size * sizeof(uint8_t));
   }
 
@@ -576,7 +574,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     int index = index_t->value->int32;
 
     // Save the chunk
-    memcpy(&s_img_data[index], chunk_data, chunk_size);
+    memcpy(&s_img_data[imageIndex][index], chunk_data, chunk_size);
     //memcpy(&e_sequence[index], chunk_data, chunk_size);
   }
 
@@ -586,19 +584,14 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     image_num = dict_find(iter, MESSAGE_KEY_AppKeyImageNumber);
     imageIndex = image_num->value->int32 -1;
     // Show the image
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "Image completely transferred.");
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Image completely transferred. Bytes used: %zu Bytes free: %zu", heap_bytes_used(), heap_bytes_free());
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Image %d completely transferred.", imageIndex + 1);
     
-    //e_bitmap[imageIndex] = gbitmap_create_from_png_data(s_img_data, s_img_size);
-    load_e_image();
-    if(s_img_data){
-      free(s_img_data);
+    if(imageIndex == 0){
+      load_e_image(imageIndex);
     }
-        
-
-    //if(imageIndex + 1 == imageCount){
-//      start_animation();
-//    }
+    else if(imageIndex + 1 == imageCount){
+      start_animation();
+    }
     //e_sequence = (GBitmapSequence*) s_img_data;
     //load_e_sequence();
     //start_animation();

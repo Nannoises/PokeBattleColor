@@ -1,6 +1,5 @@
 var BUFFER_SIZE = 8000;
 var IMAGE_COUNT = 50;
-var ImageArray = [];
 var SendConfig = function(dict){
   // Send the object
   Pebble.sendAppMessage(dict, function() {
@@ -16,16 +15,9 @@ function processImage(responseData, imageNumber) {
   for(var i = 0; i < byteArray.byteLength; i++) {
     array.push(byteArray[i]);
   }
-  
-  ImageArray[imageNumber] = array;
+
   // Send chunks to Pebble
-  //transmitImage(array, imageNumber);
-  
-  if(imageNumber == IMAGE_COUNT){
-//    for(var j=1;j<IMAGE_COUNT + 1;j++){
-//      transmitImage(ImageArray[j],j);    
-    transmitImage(ImageArray[1],1);
-   }
+  transmitImage(array, imageNumber);
 };
 function downloadImage(imageNumber) {
   var url = 'http://birdhelloworld.herokuapp.com/frame-';  
@@ -35,15 +27,11 @@ function downloadImage(imageNumber) {
     url += "0";
   }
   url += imageString + ".png";  
-  
-  console.log('Requesting: ' + url);
 
   var request = new XMLHttpRequest();
   request.onload = function() {
     console.log('Image #' + imageNumber + ' loaded successfully!');
     processImage(this.response, imageNumber);
-    if(imageNumber < IMAGE_COUNT)
-      downloadImage(imageNumber + 1);
   };
   request.responseType = "arraybuffer";
   request.open("GET", url);
@@ -75,32 +63,25 @@ function sendChunk(array, index, arrayLength, imageNumber) {
     'AppKeyDataChunk': array.slice(index, index + chunkSize),
     'AppKeyChunkSize': chunkSize,
     'AppKeyIndex': index,
-    'AppKeyImageNumber': imageNumber,
-    'AppKeyComplete': 0
+    'AppKeyImageNumber': imageNumber
   };
-  console.log('Sending chunk ' + index + ' for image ' + imageNumber + '. Chunk size: ' + chunkSize + ' Chunk data: ' + array.slice(index, index + chunkSize));
+  console.log('Sending chunk');
   // Send the chunk
   Pebble.sendAppMessage(dict, function() {
     console.log('Successfully sent chunk!');
-    if(imageNumber < IMAGE_COUNT){
-      transmitImage(ImageArray[imageNumber + 1], imageNumber + 1);
-    } else {
-      //transmitImage(ImageArray[1],1); //INFINITE LOOP
-    }
     // Success
-    //index += chunkSize;
+    index += chunkSize;
 
-    /*if(index < arrayLength) {
+    if(index < arrayLength) {
       // Send the next chunk
       sendChunk(array, index, arrayLength, imageNumber);
     } else {
       // Complete!
       Pebble.sendAppMessage({'AppKeyComplete': 0, 'AppKeyImageNumber': imageNumber});
       if(imageNumber < IMAGE_COUNT){
-        transmitImage(ImageArray[imageNumber + 1], imageNumber + 1);
-        //setTimeout(transmitImage(ImageArray[imageNumber + 1], imageNumber + 1), 100);
+        downloadImage(imageNumber + 1);
       }
-    }*/
+    }
   }, function(e) {
     console.log('Failed to send chunk with index ' + index);
   });
@@ -135,9 +116,6 @@ Pebble.addEventListener('webviewclosed', function(e) {
   
   console.log(JSON.stringify(dict));
   SendConfig(dict);
-//  for(var i=0;i<IMAGE_COUNT;i++){
-//    downloadImage(i+1);
-//  }
   downloadImage(1)   
 });
 
