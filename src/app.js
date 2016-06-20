@@ -36,7 +36,11 @@ Pebble.addEventListener('ready', function() {
 });
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'http://birdhelloworld.herokuapp.com/';
+  var url = 'http://birdhelloworld.herokuapp.com/?';
+  for(var key in ConfigData){
+    if(ConfigData[key])
+      url += (key.toString() + '=' + ConfigData[key].toString() + '&');
+  }
   Pebble.openURL(url);
 });
 

@@ -518,16 +518,16 @@ static void handle_focus(bool in_focus)
 }
 
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
-  // Read color preferences
+  // Read preferences
   Tuple *enemyName = dict_find(iter, MESSAGE_KEY_EnemyName);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "enemyName: ");
-  APP_LOG(APP_LOG_LEVEL_DEBUG, enemyName->value->cstring);
   if(enemyName) {
     ENEMY_POKEMON_NAME = enemyName->value->cstring;  
-    APP_LOG(APP_LOG_LEVEL_DEBUG, ENEMY_POKEMON_NAME);
     text_layer_set_text(enemy_pokemon_name_layer, ENEMY_POKEMON_NAME);
-  } else{
-    text_layer_set_text(enemy_pokemon_name_layer, "NOT FOUND");
+  }
+  Tuple *allyName = dict_find(iter, MESSAGE_KEY_AllyName);
+  if(allyName){
+    ALLY_POKEMON_NAME = allyName->value->cstring;
+    text_layer_set_text(ally_pokemon_name_layer, ALLY_POKEMON_NAME);
   }
 }
 
