@@ -48,7 +48,10 @@ int level_int_2 = 1;
 static char level_string[10];
 static char level_string_2[10];
 TextLayer *text_level_ally_layer;	
-TextLayer *text_level_enemy_layer;	
+TextLayer *text_level_enemy_layer;
+
+static bool flick_animate = false;
+static bool focus_animate = true;
 
 static void timer_handler(void *context) {
   uint32_t next_delay;
@@ -508,8 +511,7 @@ static void stop_animation()
 {
   animate = false;
 }
-
-static void handle_focus(bool in_focus)
+static void start_animation()
 {
   animate = true;
   app_timer_register(1, timer_handler, NULL);
@@ -517,6 +519,19 @@ static void handle_focus(bool in_focus)
   app_timer_register(10000, stop_animation, NULL);
 }
 
+static void handle_focus(bool in_focus)
+{
+  if(focus_animate){
+    start_animation();
+  }
+}
+
+static void handle_tap(AccelAxisType axis, int32_t direction)
+{
+  if(flick_animate){
+    start_animation();
+  }    
+}
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   // Read preferences
   Tuple *enemyName = dict_find(iter, MESSAGE_KEY_EnemyName);
@@ -528,6 +543,14 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   if(allyName){
     ALLY_POKEMON_NAME = allyName->value->cstring;
     text_layer_set_text(ally_pokemon_name_layer, ALLY_POKEMON_NAME);
+  }
+  Tuple *focusAnimate = dict_find(iter, MESSAGE_KEY_FocusAnimate);
+  if(focusAnimate){
+    focus_animate = focusAnimate->value->int32 == 1;
+  }
+  Tuple *flickAnimate = dict_find(iter, MESSAGE_KEY_FlickAnimate);
+  if(flickAnimate){
+    flick_animate = flickAnimate->value->int32 == 1;
   }
 }
 
@@ -559,6 +582,7 @@ void handle_init(void) {
   bluetooth_connection_service_subscribe(&handle_bluetooth);
   
   app_focus_service_subscribe(handle_focus);
+  accel_tap_service_subscribe(&handle_tap);
   app_timer_register(10000, stop_animation, NULL);
   
   app_message_open(256, 256);

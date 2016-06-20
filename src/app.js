@@ -47,13 +47,11 @@ Pebble.addEventListener('showConfiguration', function() {
 Pebble.addEventListener('webviewclosed', function(e) {
   // Decode the user's preferences
   var responseData = JSON.parse(decodeURIComponent(e.response));  
-  for(var key in responseData){
-    if(ConfigData[key] !== undefined){
-      if(typeof responseData[key] == 'string')
-        ConfigData[key] = responseData[key].toUpperCase();
-      else
-        ConfigData[key] = responseData[key];
-    }
+  for(var key in ConfigData){
+    if(typeof responseData[key] == 'string')
+      ConfigData[key] = responseData[key].toUpperCase();
+    else
+      ConfigData[key] = responseData[key] !== undefined;
   }
   
   StoreConfigData();  
