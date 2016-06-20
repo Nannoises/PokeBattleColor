@@ -1,21 +1,38 @@
-var SendConfig = function(dict){
+var ConfigData = {
+  "EnemyName": "BLASTOISE",
+  "AllyName" : "CHARIZARD",
+  "FocusAnimate" : 1,
+  "FlickAnimate" : 0
+};
+
+var SendConfig = function(){
   // Send the object
-  Pebble.sendAppMessage(dict, function() {
-    console.log('Message sent successfully: ' + JSON.stringify(dict));
+  Pebble.sendAppMessage(ConfigData, function() {
+    console.log('Message sent successfully: ' + JSON.stringify(ConfigData));
   }, function(e) {
     console.log('Message failed: ' + JSON.stringify(e));
   }); 
 };
-
+var RetrieveConfigData = function(){
+  for(var key in ConfigData){ 
+    var retrieved = localStorage.getItem(key.toString());
+    if(retrieved){
+      ConfigData[key] = retrieved;
+    }
+  }
+};
+var StoreConfigData = function(){
+  for(var key in ConfigData){     
+    if(ConfigData[key]){
+      localStorage.setItem(key.toString(), ConfigData[key]);
+    }
+  }
+};
 Pebble.addEventListener('ready', function() {
   // PebbleKit JS is ready!
   console.log('PebbleKit JS ready!');
-  var enemyName = localStorage.getItem('ENEMYNAME');
-  if(enemyName){
-    console.log(JSON.stringify(enemyName));
-    var dict = { "ENEMYNAME": enemyName };    
-    SendConfig(dict);
-  }
+  RetrieveConfigData();
+  SendConfig();
 });
 
 Pebble.addEventListener('showConfiguration', function() {
@@ -25,17 +42,18 @@ Pebble.addEventListener('showConfiguration', function() {
 
 Pebble.addEventListener('webviewclosed', function(e) {
   // Decode the user's preferences
-  var configData = JSON.parse(decodeURIComponent(e.response));  
-  var dict = { 
-    "ENEMYNAME": (configData.enemyName || "").toUpperCase(),
-    "ALLYNAME": (configData.allyName || "").toUpperCase(),
-    "FOCUSANIMATE": configData.focusAnimate || 0,
-    "FLICKANIMATE": configData.flickAnimate || 0
-  };
+  var responseData = JSON.parse(decodeURIComponent(e.response));  
+  for(var key in responseData){
+    if(ConfigData[key] !== undefined){
+      if(typeof responseData[key] == 'string')
+        ConfigData[key] = responseData[key].toUpperCase();
+      else
+        ConfigData[key] = responseData[key];
+    }
+  }
   
-  localStorage.setItem('ENEMYNAME', dict.ENEMYNAME);
-  
-  console.log(JSON.stringify(dict));
-  SendConfig(dict);
+  StoreConfigData();  
+  console.log(JSON.stringify(ConfigData));
+  SendConfig();
 });
 

@@ -519,7 +519,7 @@ static void handle_focus(bool in_focus)
 
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   // Read color preferences
-  Tuple *enemyName = dict_find(iter, MESSAGE_KEY_ENEMYNAME);
+  Tuple *enemyName = dict_find(iter, MESSAGE_KEY_EnemyName);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "enemyName: ");
   APP_LOG(APP_LOG_LEVEL_DEBUG, enemyName->value->cstring);
   if(enemyName) {
