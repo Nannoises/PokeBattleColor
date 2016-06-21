@@ -11,17 +11,25 @@
         "displayName": "PokeBattle Color",
         "enableMultiJS": false,
         "messageKeys": [
-            "ENEMYNAME",
-            "ALLYNAME",
-            "FOCUSANIMATE",
-            "FLICKANIMATE"
+            "EnemyName",
+            "AllyName",
+            "FocusAnimate",
+            "FlickAnimate"
         ],
         "projectType": "native",
         "resources": {
             "media": [
                 {
-                    "file": "images/colorBackground.png",
-                    "name": "BACKGROUND",
+                    "file": "images/sleep.png",
+                    "name": "STATUS_SLEEP",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/paralysis.png",
+                    "name": "STATUS_PARALYSIS",
                     "targetPlatforms": [
                         "basalt"
                     ],
@@ -35,6 +43,48 @@
                         "basalt"
                     ],
                     "type": "bitmap"
+                },
+                {
+                    "file": "images/colorBackground.png",
+                    "name": "BACKGROUND",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "characterRegex": "[0-9]",
+                    "file": "fonts/Pokemon_GB.ttf",
+                    "name": "FONT_LEVEL_10",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "font"
+                },
+                {
+                    "file": "fonts/Pokemon_GB.ttf",
+                    "name": "FONT_NAME_8",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "font"
+                },
+                {
+                    "characterRegex": "[0-9:]",
+                    "file": "fonts/Pokemon_GB.ttf",
+                    "name": "FONT_TIME_24",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "font"
+                },
+                {
+                    "file": "fonts/Pokemon_GB.ttf",
+                    "name": "FONT_DATE_7",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "font"
                 },
                 {
                     "file": "data/009.png",
@@ -59,57 +109,6 @@
                         "basalt"
                     ],
                     "type": "raw"
-                },
-                {
-                    "file": "images/sleep.png",
-                    "name": "STATUS_SLEEP",
-                    "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/paralysis.png",
-                    "name": "STATUS_PARALYSIS",
-                    "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "bitmap"
-                },
-                {
-                    "characterRegex": "[0-9]",
-                    "file": "fonts/Pokemon_GB.ttf",
-                    "name": "FONT_LEVEL_10",
-                    "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "font"
-                },
-                {
-                    "characterRegex": "[A-Z]",
-                    "file": "fonts/Pokemon_GB.ttf",
-                    "name": "FONT_NAME_8",
-                    "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "font"
-                },
-                {
-                    "characterRegex": "[0-9:]",
-                    "file": "fonts/Pokemon_GB.ttf",
-                    "name": "FONT_TIME_24",
-                    "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "font"
-                },
-                {
-                    "file": "fonts/Pokemon_GB.ttf",
-                    "name": "FONT_DATE_7",
-                    "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "font"
                 }
             ]
         },
@@ -117,10 +116,10 @@
         "targetPlatforms": [
             "basalt"
         ],
-        "uuid": "3a6e2b67-1aa5-43e4-bcba-f39f06a67b9f",
+        "uuid": "2d81b6f1-3a4a-4375-8e51-a978a29648e6",
         "watchapp": {
             "watchface": true
         }
     },
-    "version": "1.2.0"
+    "version": "2.2.0"
 }

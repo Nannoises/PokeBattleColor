@@ -1,41 +1,66 @@
-var SendConfig = function(dict){
+var ConfigData = {
+  "EnemyName": "BLASTOISE",
+  "AllyName" : "CHARIZARD",
+  "FocusAnimate" : true,
+  "FlickAnimate" : false
+};
+
+var SendConfig = function(){
   // Send the object
-  Pebble.sendAppMessage(dict, function() {
-    console.log('Message sent successfully: ' + JSON.stringify(dict));
+  Pebble.sendAppMessage(ConfigData, function() {
+    console.log('Message sent successfully: ' + JSON.stringify(ConfigData));
   }, function(e) {
     console.log('Message failed: ' + JSON.stringify(e));
   }); 
 };
-
+var RetrieveConfigData = function(){
+  for(var key in ConfigData){ 
+    var retrieved = localStorage.getItem(key.toString());
+    //console.log('Key: ' + key + ' RetrievedValue: ' + retrieved.toString());
+    if(retrieved){
+      if(typeof retrieved == 'string' && retrieved.toLowerCase() == 'true')
+        ConfigData[key] = 1;
+      else if(typeof retrieved == 'string' && retrieved.toLowerCase() == 'false')
+        ConfigData[key] = 0;
+      else
+        ConfigData[key] = retrieved;
+    }
+  }
+};
+var StoreConfigData = function(){
+  for(var key in ConfigData){         
+    console.log('Key: ' + key + ' Value to Store: ' + ConfigData[key]);    
+    localStorage.setItem(key.toString(), ConfigData[key]);    
+  }
+};
 Pebble.addEventListener('ready', function() {
   // PebbleKit JS is ready!
   console.log('PebbleKit JS ready!');
-  var enemyName = localStorage.getItem('ENEMYNAME');
-  if(enemyName){
-    console.log(JSON.stringify(enemyName));
-    var dict = { "ENEMYNAME": enemyName };    
-    SendConfig(dict);
-  }
+  RetrieveConfigData();
+  //SendConfig(); Reduce messages to pebble since config is stored on watch now.
 });
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'http://birdhelloworld.herokuapp.com/';
+  var url = 'http://birdhelloworld.herokuapp.com/?';
+  for(var key in ConfigData){
+    if(ConfigData[key] !== undefined)
+      url += (key.toString() + '=' + ConfigData[key].toString() + '&');
+  }
   Pebble.openURL(url);
 });
 
 Pebble.addEventListener('webviewclosed', function(e) {
   // Decode the user's preferences
-  var configData = JSON.parse(decodeURIComponent(e.response));  
-  var dict = { 
-    "ENEMYNAME": (configData.enemyName || "").toUpperCase(),
-    "ALLYNAME": (configData.allyName || "").toUpperCase(),
-    "FOCUSANIMATE": configData.focusAnimate || 0,
-    "FLICKANIMATE": configData.flickAnimate || 0
-  };
+  var responseData = JSON.parse(decodeURIComponent(e.response));  
+  for(var key in ConfigData){
+    if(typeof responseData[key] == 'string')
+      ConfigData[key] = responseData[key].toUpperCase();
+    else
+      ConfigData[key] = responseData[key] !== undefined;
+  }
   
-  localStorage.setItem('ENEMYNAME', dict.ENEMYNAME);
-  
-  console.log(JSON.stringify(dict));
-  SendConfig(dict);
+  StoreConfigData();  
+  //console.log(JSON.stringify(ConfigData));
+  SendConfig();
 });
 
