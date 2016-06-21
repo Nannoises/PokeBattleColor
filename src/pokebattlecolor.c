@@ -539,6 +539,7 @@ static void handle_tap(AccelAxisType axis, int32_t direction)
 static void save_configured_data(){
   persist_write_bool(FLICK_ANIMATE_PKEY, flick_animate);
   persist_write_bool(FOCUS_ANIMATE_PKEY, focus_animate);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "focus_animate stored as %d", focus_animate);
   persist_write_string(ENEMY_NAME_PKEY, ENEMY_POKEMON_NAME);
   persist_write_string(ALLY_NAME_PKEY, ALLY_POKEMON_NAME);
 }
@@ -557,13 +558,15 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   }
   Tuple *focusAnimate = dict_find(iter, MESSAGE_KEY_FocusAnimate);
   if(focusAnimate){
-    focus_animate = focusAnimate->value->int32 == 1;
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "focus_animate set %d", focus_animate);
+    focus_animate = focusAnimate->value->int8 == 1;
+    //APP_LOG(APP_LOG_LEVEL_WARNING, "focusAnimate tuple value: %zu", focusAnimate->value->int32);
+    //APP_LOG(APP_LOG_LEVEL_WARNING, "focusAnimate tuple value with int8: %d", focusAnimate->value->int8);
+    //APP_LOG(APP_LOG_LEVEL_WARNING, "focus_animate set %d", focus_animate);
   }
   Tuple *flickAnimate = dict_find(iter, MESSAGE_KEY_FlickAnimate);
   if(flickAnimate){
-    flick_animate = flickAnimate->value->int32 == 1;
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "flick_animate set %d", flick_animate);
+    flick_animate = flickAnimate->value->int8 == 1;
+    //APP_LOG(APP_LOG_LEVEL_WARNING, "flick_animate set %d", flick_animate);
   }  
 }
 
@@ -571,7 +574,8 @@ static void retrieve_configured_data(){
   flick_animate = persist_exists(FLICK_ANIMATE_PKEY) ? persist_read_bool(FLICK_ANIMATE_PKEY) : false;
   focus_animate = persist_exists(FOCUS_ANIMATE_PKEY) ? persist_read_bool(FOCUS_ANIMATE_PKEY) : true;
   
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "focus_animate read as  %d", focus_animate);
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "focus_animate read as  %d", focus_animate);
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "flick_animate read as  %d", flick_animate);
   if(persist_exists(ENEMY_NAME_PKEY)){
     persist_read_string(ENEMY_NAME_PKEY, ENEMY_POKEMON_NAME, strlen(ENEMY_POKEMON_NAME) + 1);
   }
