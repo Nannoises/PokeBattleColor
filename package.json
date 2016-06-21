@@ -116,10 +116,10 @@
         "targetPlatforms": [
             "basalt"
         ],
-        "uuid": "46f9890f-6e26-485c-b8c7-dd30cfdaf61e",
+        "uuid": "2d81b6f1-3a4a-4375-8e51-a978a29648e6",
         "watchapp": {
             "watchface": true
         }
     },
-    "version": "2.0.0"
+    "version": "2.2.0"
 }
