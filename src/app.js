@@ -1,8 +1,8 @@
 var ConfigData = {
   "EnemyName": "BLASTOISE",
   "AllyName" : "CHARIZARD",
-  "FocusAnimate" : 0,
-  "FlickAnimate" : 0
+  "FocusAnimate" : true,
+  "FlickAnimate" : false
 };
 
 var SendConfig = function(){
