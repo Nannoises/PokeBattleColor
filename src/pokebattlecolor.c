@@ -5,10 +5,7 @@ static GBitmap *s_bitmap = NULL;
 static GBitmap *e_bitmap = NULL;
 static BitmapLayer *s_bitmap_layer;
 static BitmapLayer *e_bitmap_layer;
-static GBitmapSequence *s_sequence = NULL;
-static GBitmapSequence *e_sequence = NULL;
 
-static bool animate = false;
 static bool shinyAlly = false;
 
 static GFont time_font;
@@ -50,100 +47,20 @@ static char level_string_2[10];
 TextLayer *text_level_ally_layer;	
 TextLayer *text_level_enemy_layer;
 
-static bool flick_animate = false;
-static bool focus_animate = true;
-
 #define ENEMY_NAME_PKEY 1
 #define ALLY_NAME_PKEY 2
-#define FLICK_ANIMATE_PKEY 3
-#define FOCUS_ANIMATE_PKEY 4
+#define ALLY_SPRITE_PKEY 3
+#define ALLY_SHINY_SPRITE_PKEY 4
+#define ENEMY_SPRITE_PKEY 5
+
+#define IMAGE_TYPE_ALLY_SPRITE 0
+#define IMAGE_TYPE_ALLY_SHINY_SPRITE 1
+#define IMAGE_TYPE_ENEMY_SPRITE 2
 
 static bool health_stats_set = false;
 
-static void timer_handler(void *context) {
-  uint32_t next_delay;
-
-  // Advance to the next APNG frame
-  if(gbitmap_sequence_update_bitmap_next_frame(s_sequence, s_bitmap, &next_delay)) {
-    bitmap_layer_set_bitmap(s_bitmap_layer, s_bitmap);
-    layer_mark_dirty(bitmap_layer_get_layer(s_bitmap_layer));
-
-    // Timer for that delay
-    if(animate)
-    {
-      app_timer_register(next_delay, timer_handler, NULL);
-    }
-  } else {
-    // Start again
-    gbitmap_sequence_restart(s_sequence);
-  }
-}
-
-static void e_timer_handler(void *context) {
-  uint32_t next_delay;
-
-  // Advance to the next APNG frame
-  if(gbitmap_sequence_update_bitmap_next_frame(e_sequence, e_bitmap, &next_delay)) {
-    bitmap_layer_set_bitmap(e_bitmap_layer, e_bitmap);
-    layer_mark_dirty(bitmap_layer_get_layer(e_bitmap_layer));
-
-    // Timer for that delay
-    if(animate)
-    {
-      app_timer_register(next_delay, e_timer_handler, NULL);
-    }
-  } else {
-    // Start again
-    gbitmap_sequence_restart(e_sequence);
-  }
-}
-
-static void load_sequence() {
-  // Free old data
-  if(s_sequence) {
-    gbitmap_sequence_destroy(s_sequence);
-    s_sequence = NULL;
-  }
-  if(s_bitmap) {
-    gbitmap_destroy(s_bitmap);
-    s_bitmap = NULL;
-  }    
-
-  // Create 
-  if(shinyAlly)
-  {
-    s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ALLY_POKEMON_SHINY);
-  }
-  else
-  {
-    s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ALLY_POKEMON);
-  }
-  
-  // Create GBitmap
-  s_bitmap = gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(s_sequence), GBitmapFormat8Bit);
-  
-  timer_handler(NULL);
-}
-
-static void load_e_sequence() {   
-  // Free old data
-  if(e_sequence) {
-    gbitmap_sequence_destroy(e_sequence);
-    e_sequence = NULL;
-  }
-  if(e_bitmap) {
-    gbitmap_destroy(e_bitmap);
-    e_bitmap = NULL;
-  }
-
-  // Create 
-  e_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_ENEMY_POKEMON);
-
-  // Create GBitmap
-  e_bitmap = gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(e_sequence), GBitmapFormat8Bit);
-  
-  e_timer_handler(NULL);
-}
+static uint8_t *img_data[3];
+static int img_size[3];
 
 void update_level_text()
 {
@@ -200,8 +117,6 @@ static void load_ally_pokemon_layer(Layer *window_layer)
   s_bitmap_layer = bitmap_layer_create(bounds);
   bitmap_layer_set_compositing_mode(s_bitmap_layer, GCompOpSet);
   layer_add_child(window_layer, bitmap_layer_get_layer(s_bitmap_layer));
-
-  load_sequence();
 }
 
 static void load_enemy_pokemon_layer(Layer *window_layer)
@@ -212,9 +127,49 @@ static void load_enemy_pokemon_layer(Layer *window_layer)
   
   e_bitmap_layer = bitmap_layer_create(e_bounds);
   bitmap_layer_set_compositing_mode(e_bitmap_layer, GCompOpSet);
-  layer_add_child(window_layer, bitmap_layer_get_layer(e_bitmap_layer));
+  layer_add_child(window_layer, bitmap_layer_get_layer(e_bitmap_layer));  
+}
+
+static void load_ally_image()
+{
+  if(s_bitmap){    
+    gbitmap_destroy(s_bitmap);
+  }
   
-  load_e_sequence();
+  // Create new GBitmap from downloaded PNG data
+  if(shinyAlly){
+    s_bitmap = gbitmap_create_from_png_data(img_data[IMAGE_TYPE_ALLY_SHINY_SPRITE], img_size[IMAGE_TYPE_ALLY_SHINY_SPRITE]);
+  } else{
+    s_bitmap = gbitmap_create_from_png_data(img_data[IMAGE_TYPE_ALLY_SPRITE], img_size[IMAGE_TYPE_ALLY_SPRITE]);
+  }
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "s_bitmap set. Bytes used: %zu Bytes free: %zu", heap_bytes_used(), heap_bytes_free());
+
+  // Show the image
+  if(s_bitmap) {
+    bitmap_layer_set_bitmap(s_bitmap_layer, s_bitmap);
+    layer_mark_dirty(bitmap_layer_get_layer(s_bitmap_layer));
+  } else {
+    APP_LOG(APP_LOG_LEVEL_ERROR, "No Ally GBitmap!");
+  }
+}
+
+static void load_enemy_image()
+{
+  if(e_bitmap){    
+    gbitmap_destroy(e_bitmap);
+  }
+  
+  // Create new GBitmap from downloaded PNG data
+  e_bitmap = gbitmap_create_from_png_data(img_data[IMAGE_TYPE_ENEMY_SPRITE], img_size[IMAGE_TYPE_ENEMY_SPRITE]);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "e_bitmap set. Bytes used: %zu Bytes free: %zu", heap_bytes_used(), heap_bytes_free());
+
+  // Show the image
+  if(e_bitmap) {
+    bitmap_layer_set_bitmap(e_bitmap_layer, e_bitmap);
+    layer_mark_dirty(bitmap_layer_get_layer(e_bitmap_layer));
+  } else {
+    APP_LOG(APP_LOG_LEVEL_ERROR, "No Enemy GBitmap!");
+  }
 }
 
 static void load_background_layer(Layer *window_layer)
@@ -354,19 +309,6 @@ static void load_level_text_layers(Layer *window_layer)
   update_level_text();
 }
 
-static void stop_animation()
-{
-  animate = false;
-}
-
-static void start_animation()
-{
-  animate = true;
-  app_timer_register(1, timer_handler, NULL);
-  app_timer_register(1, e_timer_handler, NULL);
-  app_timer_register(10000, stop_animation, NULL);
-}
-
 static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   
@@ -390,11 +332,7 @@ static void main_window_load(Window *window) {
   
   load_pokemon_name_layers(window_layer);
   
-  load_level_text_layers(window_layer);
-  
-  if(focus_animate){
-    start_animation();
-  }
+  load_level_text_layers(window_layer);  
 }
 
 static void main_window_unload(Window *window) {
@@ -458,7 +396,7 @@ static void set_health_stats(){
     level_int = 100;
     if(!shinyAlly){
       shinyAlly = true;
-      load_sequence();
+      load_ally_image();
     }
   }
   else
@@ -466,7 +404,7 @@ static void set_health_stats(){
     level_int = endOfDayPercentStepGoal;
     if(shinyAlly){
       shinyAlly = false;
-      load_sequence();
+      load_ally_image();
     }
   }
   update_level_text();
@@ -530,24 +468,7 @@ static void handle_bluetooth(bool connected) {
 	}
 }
 
-static void handle_focus(bool in_focus)
-{
-  if(focus_animate){
-    start_animation();
-  }
-}
-
-static void handle_tap(AccelAxisType axis, int32_t direction)
-{
-  if(flick_animate){
-    start_animation();
-  }    
-}
-
 static void save_configured_data(){
-  persist_write_bool(FLICK_ANIMATE_PKEY, flick_animate);
-  persist_write_bool(FOCUS_ANIMATE_PKEY, focus_animate);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "focus_animate stored as %d", focus_animate);
   persist_write_string(ENEMY_NAME_PKEY, ENEMY_POKEMON_NAME);
   persist_write_string(ALLY_NAME_PKEY, ALLY_POKEMON_NAME);
 }
@@ -564,26 +485,42 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     ALLY_POKEMON_NAME = allyName->value->cstring;
     text_layer_set_text(ally_pokemon_name_layer, ALLY_POKEMON_NAME);
   }
-  Tuple *focusAnimate = dict_find(iter, MESSAGE_KEY_FocusAnimate);
-  if(focusAnimate){
-    focus_animate = focusAnimate->value->int8 == 1;
-    //APP_LOG(APP_LOG_LEVEL_WARNING, "focusAnimate tuple value: %zu", focusAnimate->value->int32);
-    //APP_LOG(APP_LOG_LEVEL_WARNING, "focusAnimate tuple value with int8: %d", focusAnimate->value->int8);
-    //APP_LOG(APP_LOG_LEVEL_WARNING, "focus_animate set %d", focus_animate);
+  Tuple *image_type;
+  Tuple *img_size_t = dict_find(iter, MESSAGE_KEY_AppKeyDataLength);
+  if(img_size_t) {    
+    image_type = dict_find(iter, MESSAGE_KEY_ImageType);
+    img_size[image_type->value->int32] = img_size_t->value->int32;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Image %d size: %d", image_type->value->int8, img_size[image_type->value->int32]);
+    // Allocate buffer for image data    
+    img_data[image_type->value->int32] = (uint8_t*)malloc(img_size[image_type->value->int32] * sizeof(uint8_t));    
   }
-  Tuple *flickAnimate = dict_find(iter, MESSAGE_KEY_FlickAnimate);
-  if(flickAnimate){
-    flick_animate = flickAnimate->value->int8 == 1;
-    //APP_LOG(APP_LOG_LEVEL_WARNING, "flick_animate set %d", flick_animate);
-  }  
+
+  // An image chunk
+  Tuple *chunk_t = dict_find(iter, MESSAGE_KEY_AppKeyDataChunk);
+  if(chunk_t) {
+    uint8_t *chunk_data = chunk_t->value->data;
+    image_type = dict_find(iter, MESSAGE_KEY_ImageType);
+    Tuple *chunk_size_t = dict_find(iter, MESSAGE_KEY_AppKeyChunkSize);
+    int chunk_size = chunk_size_t->value->int32;
+
+    Tuple *index_t = dict_find(iter, MESSAGE_KEY_AppKeyIndex);
+    int index = index_t->value->int32;
+
+    // Save the chunk
+    memcpy(&img_data[image_type->value->int32][index], chunk_data, chunk_size);    
+  }
+
+  // Complete?
+  Tuple *complete_t = dict_find(iter, MESSAGE_KEY_AppKeyComplete);
+  if(complete_t) {
+    image_type = dict_find(iter, MESSAGE_KEY_ImageType);    
+    // Show the image
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "Image completely transferred.");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Image completely transferred. Bytes used: %zu Bytes free: %zu", heap_bytes_used(), heap_bytes_free());        
+  }
 }
 
 static void retrieve_configured_data(){
-  flick_animate = persist_exists(FLICK_ANIMATE_PKEY) ? persist_read_bool(FLICK_ANIMATE_PKEY) : false;
-  focus_animate = persist_exists(FOCUS_ANIMATE_PKEY) ? persist_read_bool(FOCUS_ANIMATE_PKEY) : true;
-  
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "focus_animate read as  %d", focus_animate);
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "flick_animate read as  %d", flick_animate);
   if(persist_exists(ENEMY_NAME_PKEY)){
     persist_read_string(ENEMY_NAME_PKEY, ENEMY_POKEMON_NAME, strlen(ENEMY_POKEMON_NAME) + 1);
   }
@@ -623,11 +560,7 @@ void handle_init(void) {
   handle_bluetooth(bluetooth_connection_service_peek());
   bluetooth_connection_service_subscribe(&handle_bluetooth);
   
-  app_focus_service_subscribe(handle_focus);
-  accel_tap_service_subscribe(&handle_tap);
-  app_timer_register(10000, stop_animation, NULL);
-  
-  app_message_open(256, 256);
+  app_message_open(app_message_inbox_size_maximum(), 64);
   app_message_register_inbox_received(inbox_received_handler);
   
 	// App Logging!
