@@ -58,6 +58,8 @@ static bool focus_animate = true;
 #define FLICK_ANIMATE_PKEY 3
 #define FOCUS_ANIMATE_PKEY 4
 
+static bool health_stats_set = false;
+
 static void timer_handler(void *context) {
   uint32_t next_delay;
 
@@ -174,7 +176,7 @@ static void load_date_text_layer(Layer *window_layer)
 static void load_pokemon_name_layers(Layer *window_layer)
 {  
   pokemon_name_font  = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_NAME_8));
-  ally_pokemon_name_layer = text_layer_create(GRect(67,78,130,12));
+  ally_pokemon_name_layer = text_layer_create(GRect(70,78,120,12));
   text_layer_set_text_color(ally_pokemon_name_layer, GColorBlack);
  	text_layer_set_background_color(ally_pokemon_name_layer, GColorClear);
   text_layer_set_font(ally_pokemon_name_layer, pokemon_name_font);
@@ -494,7 +496,13 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
   text_layer_set_text(text_time_layer, time_text);
  	text_layer_set_text(text_date_layer, date_text);
 
-  set_health_stats();
+  if(tick_time->tm_min % 5 == 0 && !health_stats_set){
+    set_health_stats();
+    health_stats_set = true;
+  }
+  else{
+    health_stats_set = false;
+  }
 }
 
 void battery_state_handler(BatteryChargeState charge) {
@@ -607,6 +615,8 @@ void handle_init(void) {
 
 	handle_minute_tick(tick_time, MINUTE_UNIT);
  	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);  
+  
+  set_health_stats();
   
   battery_state_service_subscribe (&battery_state_handler);
   
