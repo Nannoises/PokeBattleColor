@@ -1,8 +1,9 @@
 var ConfigData = {
   "EnemyName": "BLASTOISE",
   "AllyName" : "CHARIZARD",
-  "FocusAnimate" : true,
-  "FlickAnimate" : false
+  "AllySpriteUrl" : "",
+  "AllyShinySpriteUrl" : "",
+  "EnemySpriteUrl" : ""
 };
 var BUFFER_SIZE = 8000;
 
@@ -42,7 +43,7 @@ Pebble.addEventListener('ready', function() {
 });
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'http://birdhelloworld.herokuapp.com/?';
+  var url = 'http://birdhelloworld.herokuapp.com/custom?';
   for(var key in ConfigData){
     if(ConfigData[key] !== undefined)
       url += (key.toString() + '=' + ConfigData[key].toString() + '&');
