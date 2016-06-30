@@ -4,6 +4,7 @@ var ConfigData = {
   "FocusAnimate" : true,
   "FlickAnimate" : false
 };
+var BUFFER_SIZE = 8000;
 
 var SendConfig = function(){
   // Send the object
@@ -63,4 +64,71 @@ Pebble.addEventListener('webviewclosed', function(e) {
   //console.log(JSON.stringify(ConfigData));
   SendConfig();
 });
+function processImage(responseData) {
+  // Convert to a array
+  var byteArray = new Uint8Array(responseData);
+  var array = [];
+  for(var i = 0; i < byteArray.byteLength; i++) {
+    array.push(byteArray[i]);
+  }
+    
+  // Send chunks to Pebble
+  transmitImage(array);
+};
+function downloadImage(url) {    
+  console.log('Requesting: ' + url);
+  var request = new XMLHttpRequest();
+  request.onload = function() {
+    console.log(url + ' loaded successfully!');
+    processImage(this.response);
+  };
+  request.responseType = "arraybuffer";
+  request.open("GET", url);
+  request.send();
+};
+function transmitImage(array) {
+  var index = 0;
+  var arrayLength = array.length;
 
+  // Transmit the length for array allocation
+  console.log('Sending image metadata');
+  Pebble.sendAppMessage({'AppKeyDataLength': arrayLength }, function(e) {
+    // Success, begin sending chunks
+    sendChunk(array, index, arrayLength);
+  }, function(e) {
+    console.log('Failed to initiate image transfer!');
+  });
+};
+function sendChunk(array, index, arrayLength) {
+  // Determine the next chunk size
+  var chunkSize = BUFFER_SIZE;
+  if(arrayLength - index < BUFFER_SIZE) {
+    // Resize to fit just the remaining data items
+    chunkSize = arrayLength - index;
+  }
+
+  // Prepare the dictionary
+  var dict = {
+    'AppKeyDataChunk': array.slice(index, index + chunkSize),
+    'AppKeyChunkSize': chunkSize,
+    'AppKeyIndex': index,
+    'AppKeyComplete': 0
+  };
+  console.log('Sending chunk ' + index + '. Chunk size: ' + chunkSize + ' Chunk data: ' + array.slice(index, index + chunkSize));
+  // Send the chunk
+  Pebble.sendAppMessage(dict, function() {
+    console.log('Successfully sent chunk!');    
+    // Success
+    index += chunkSize;
+
+    if(index < arrayLength) {
+      // Send the next chunk
+      sendChunk(array, index, arrayLength);
+    } else {
+      // Complete!
+      Pebble.sendAppMessage({'AppKeyComplete': 0});      
+    }
+  }, function(e) {
+    console.log('Failed to send chunk with index ' + index);
+  });
+};
