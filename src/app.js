@@ -6,6 +6,9 @@ var ConfigData = {
   "EnemySpriteUrl" : ""
 };
 var BUFFER_SIZE = 8000;
+var IMAGE_TYPE_ALLY_SPRITE = 0;
+var IMAGE_TYPE_ALLY_SHINY_SPRITE = 1;
+var IMAGE_TYPE_ENEMY_SPRITE = 2;
 
 var SendConfig = function(){
   // Send the object
@@ -39,6 +42,8 @@ Pebble.addEventListener('ready', function() {
   // PebbleKit JS is ready!
   console.log('PebbleKit JS ready!');
   RetrieveConfigData();
+  
+  getAndTransmitImage('http://www.pokestadium.com/sprites/black-white/blastoise.png', IMAGE_TYPE_ENEMY_SPRITE, null);
   //SendConfig(); Reduce messages to pebble since config is stored on watch now.
 });
 
@@ -65,7 +70,13 @@ Pebble.addEventListener('webviewclosed', function(e) {
   //console.log(JSON.stringify(ConfigData));
   SendConfig();
 });
-function getAndTransmitImage(url, callback) {    
+function getAndTransmitImage(url, imageType, callback) {
+  var retrieved = localStorage.getItem(url);
+  /*if(retrieved){
+    console.log(url + ' retrieved from local storage.')
+    transmitImage(retrieved, imageType, callback);
+    return;
+  }*/
   console.log('Requesting: ' + url);
   var request = new XMLHttpRequest();
   request.onload = function() {
@@ -77,26 +88,26 @@ function getAndTransmitImage(url, callback) {
       array.push(byteArray[i]);
     }
     localStorage.setItem(url, array);
-    transmitImage(array, callback);
+    transmitImage(array, imageType, callback);
   };
   request.responseType = "arraybuffer";
   request.open("GET", url);
   request.send();
 };
-function transmitImage(array, callback) {
+function transmitImage(array, imageType, callback) {
   var index = 0;
   var arrayLength = array.length;
 
   // Transmit the length for array allocation
   console.log('Sending image metadata');
-  Pebble.sendAppMessage({'AppKeyDataLength': arrayLength }, function(e) {
+  Pebble.sendAppMessage({'AppKeyDataLength': arrayLength, 'ImageType': imageType }, function(e) {
     // Success, begin sending chunks
-    sendChunk(array, index, arrayLength, callback);
+    sendChunk(array, index, arrayLength, imageType, callback);
   }, function(e) {
     console.log('Failed to initiate image transfer!');
   });
 };
-function sendChunk(array, index, arrayLength, callback) {
+function sendChunk(array, index, arrayLength, imageType, callback) {
   // Determine the next chunk size
   var chunkSize = BUFFER_SIZE;
   var lastChunk = arrayLength - index < BUFFER_SIZE;
@@ -109,7 +120,8 @@ function sendChunk(array, index, arrayLength, callback) {
   var dict = {
     'AppKeyDataChunk': array.slice(index, index + chunkSize),
     'AppKeyChunkSize': chunkSize,
-    'AppKeyIndex': index    
+    'AppKeyIndex': index,
+    'ImageType' : imageType
   };
   if(lastChunk){
     dict.AppKeyComplete = 0;
@@ -123,7 +135,7 @@ function sendChunk(array, index, arrayLength, callback) {
 
     if(index < arrayLength) {
       // Send the next chunk
-      sendChunk(array, index, arrayLength);
+      sendChunk(array, index, arrayLength, imageType, callback);
     } else{
       if(callback && callback instanceof Function){
         callback();

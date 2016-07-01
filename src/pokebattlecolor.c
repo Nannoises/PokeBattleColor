@@ -52,6 +52,7 @@ TextLayer *text_level_enemy_layer;
 #define ALLY_SPRITE_PKEY 3
 #define ALLY_SHINY_SPRITE_PKEY 4
 #define ENEMY_SPRITE_PKEY 5
+#define SPRITE_SIZES_PKEY 6
 
 #define IMAGE_TYPE_ALLY_SPRITE 0
 #define IMAGE_TYPE_ALLY_SHINY_SPRITE 1
@@ -64,6 +65,9 @@ static bool health_stats_set = false;
 static uint8_t *img_data[NUMBER_OF_POKEMON_SPRITES];
 static int img_size[NUMBER_OF_POKEMON_SPRITES];
 static bool img_loaded[NUMBER_OF_POKEMON_SPRITES];
+
+static int test_size;
+static uint8_t *test_data;
 
 void update_level_text()
 {
@@ -172,7 +176,10 @@ static void load_enemy_image()
   
   // Create new GBitmap from downloaded PNG data
   if(img_loaded[IMAGE_TYPE_ENEMY_SPRITE]){
-    e_bitmap = gbitmap_create_from_png_data(img_data[IMAGE_TYPE_ENEMY_SPRITE], img_size[IMAGE_TYPE_ENEMY_SPRITE]);
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "Attempting to set e_bitmap to img of size: %d and first value of %d", img_size[IMAGE_TYPE_ENEMY_SPRITE],img_data[IMAGE_TYPE_ENEMY_SPRITE][0]);  
+    //e_bitmap = gbitmap_create_from_png_data(img_data[IMAGE_TYPE_ENEMY_SPRITE], img_size[IMAGE_TYPE_ENEMY_SPRITE]);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Attempting to set e_bitmap to img of size: %d and first value of %d", test_size,test_data[0]);  
+    e_bitmap = gbitmap_create_from_png_data(test_data, test_size);
   } else {
     e_bitmap = gbitmap_create_with_resource(RESOURCE_ID_BLASTOISE);    
   }  
@@ -492,7 +499,17 @@ static void save_configured_data(){
   persist_write_string(ENEMY_NAME_PKEY, ENEMY_POKEMON_NAME);
   persist_write_string(ALLY_NAME_PKEY, ALLY_POKEMON_NAME);
   
-  //Save image data TODO
+  //Save image data MAY NOT WORK AS LIMIT IS 256 bytes?
+  /*persist_write_data(SPRITE_SIZES_PKEY, &img_size, sizeof(img_size));
+  if(img_loaded[IMAGE_TYPE_ALLY_SPRITE]){
+    persist_write_data(ALLY_SPRITE_PKEY, img_data[IMAGE_TYPE_ALLY_SPRITE], img_size[IMAGE_TYPE_ALLY_SPRITE]);
+  }
+  if(img_loaded[IMAGE_TYPE_ALLY_SHINY_SPRITE]){
+    persist_write_data(ALLY_SHINY_SPRITE_PKEY, img_data[IMAGE_TYPE_ALLY_SHINY_SPRITE], img_size[IMAGE_TYPE_ALLY_SHINY_SPRITE]);
+  }
+  if(img_loaded[IMAGE_TYPE_ENEMY_SPRITE]){
+    persist_write_data(ENEMY_SPRITE_PKEY, img_data[IMAGE_TYPE_ENEMY_SPRITE], img_size[IMAGE_TYPE_ENEMY_SPRITE]);
+  }*/
 }
 
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
@@ -511,10 +528,14 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *img_size_t = dict_find(iter, MESSAGE_KEY_AppKeyDataLength);
   if(img_size_t) {    
     image_type = dict_find(iter, MESSAGE_KEY_ImageType);
-    img_size[image_type->value->int32] = img_size_t->value->int32;
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Image %d size: %d", image_type->value->int8, img_size[image_type->value->int32]);
+    //img_size[image_type->value->int32] = img_size_t->value->int32;
+    test_size = img_size_t->value->int32;
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "Image %ld size: %d", image_type->value->int32, img_size[image_type->value->int32]);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Image %ld size: %d", image_type->value->int32, test_size);
+    
     // Allocate buffer for image data    
-    img_data[image_type->value->int32] = (uint8_t*)malloc(img_size[image_type->value->int32] * sizeof(uint8_t));    
+    //img_data[image_type->value->int32] = (uint8_t*)malloc(img_size[image_type->value->int32] * sizeof(uint8_t));    
+    test_data = (uint8_t*)malloc(test_size * sizeof(uint8_t));    
   }
 
   // An image chunk
@@ -529,19 +550,26 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     int index = index_t->value->int32;
 
     // Save the chunk
-    memcpy(&img_data[image_type->value->int32][index], chunk_data, chunk_size);    
+    //memcpy(&img_data[image_type->value->int32][index], chunk_data, chunk_size);    
+    memcpy(&test_data[index], chunk_data, chunk_size);
   }
 
   // Complete?
   Tuple *complete_t = dict_find(iter, MESSAGE_KEY_AppKeyComplete);
   if(complete_t) {
-    image_type = dict_find(iter, MESSAGE_KEY_ImageType);
-    
-    //Show the image TODO
-    
-    //Store image locally TODO
-    
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Image completely transferred. Bytes used: %zu Bytes free: %zu", heap_bytes_used(), heap_bytes_free());        
+
+    image_type = dict_find(iter, MESSAGE_KEY_ImageType);    
+    //Show the image
+    img_loaded[image_type->value->int32] = true;
+    /*if(image_type->value->int32 == IMAGE_TYPE_ALLY_SPRITE || image_type->value->int32 == IMAGE_TYPE_ALLY_SHINY_SPRITE){
+      load_ally_image();
+    } else if(image_type->value->int32 == IMAGE_TYPE_ENEMY_SPRITE){
+      load_enemy_image();
+    }*/
+    load_enemy_image();
+    
+    //Store image locally TODO    
   }
 }
 
@@ -553,7 +581,7 @@ static void retrieve_configured_data(){
     persist_read_string(ALLY_NAME_PKEY, ALLY_POKEMON_NAME, strlen(ALLY_POKEMON_NAME) + 1);
   }
   
-  //Retrieve image data TODO
+  //Retrieve image data TODO  
 }
 
 void handle_init(void) {
