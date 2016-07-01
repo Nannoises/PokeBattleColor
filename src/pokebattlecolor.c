@@ -66,8 +66,8 @@ static uint8_t *img_data[NUMBER_OF_POKEMON_SPRITES];
 static int img_size[NUMBER_OF_POKEMON_SPRITES];
 static bool img_loaded[NUMBER_OF_POKEMON_SPRITES];
 
-static int test_size;
-static uint8_t *test_data;
+//static int test_size;
+//static uint8_t *test_data;
 
 void update_level_text()
 {
@@ -176,10 +176,10 @@ static void load_enemy_image()
   
   // Create new GBitmap from downloaded PNG data
   if(img_loaded[IMAGE_TYPE_ENEMY_SPRITE]){
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "Attempting to set e_bitmap to img of size: %d and first value of %d", img_size[IMAGE_TYPE_ENEMY_SPRITE],img_data[IMAGE_TYPE_ENEMY_SPRITE][0]);  
-    //e_bitmap = gbitmap_create_from_png_data(img_data[IMAGE_TYPE_ENEMY_SPRITE], img_size[IMAGE_TYPE_ENEMY_SPRITE]);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Attempting to set e_bitmap to img of size: %d and first value of %d", test_size,test_data[0]);  
-    e_bitmap = gbitmap_create_from_png_data(test_data, test_size);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Attempting to set e_bitmap to img of size: %d and first value of %d", img_size[IMAGE_TYPE_ENEMY_SPRITE],img_data[IMAGE_TYPE_ENEMY_SPRITE][0]);  
+    e_bitmap = gbitmap_create_from_png_data(img_data[IMAGE_TYPE_ENEMY_SPRITE], img_size[IMAGE_TYPE_ENEMY_SPRITE]);
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "Attempting to set e_bitmap to img of size: %d and first value of %d", test_size,test_data[0]);  
+    //e_bitmap = gbitmap_create_from_png_data(test_data, test_size);
   } else {
     e_bitmap = gbitmap_create_with_resource(RESOURCE_ID_BLASTOISE);    
   }  
@@ -528,14 +528,14 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *img_size_t = dict_find(iter, MESSAGE_KEY_AppKeyDataLength);
   if(img_size_t) {    
     image_type = dict_find(iter, MESSAGE_KEY_ImageType);
-    //img_size[image_type->value->int32] = img_size_t->value->int32;
-    test_size = img_size_t->value->int32;
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "Image %ld size: %d", image_type->value->int32, img_size[image_type->value->int32]);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Image %ld size: %d", image_type->value->int32, test_size);
+    img_size[image_type->value->int32] = img_size_t->value->int32;
+    //test_size = img_size_t->value->int32;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Image %ld size: %d", image_type->value->int32, img_size[image_type->value->int32]);
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "Image %ld size: %d", image_type->value->int32, test_size);
     
     // Allocate buffer for image data    
-    //img_data[image_type->value->int32] = (uint8_t*)malloc(img_size[image_type->value->int32] * sizeof(uint8_t));    
-    test_data = (uint8_t*)malloc(test_size * sizeof(uint8_t));    
+    img_data[image_type->value->int32] = (uint8_t*)malloc(img_size[image_type->value->int32] * sizeof(uint8_t));    
+    //test_data = (uint8_t*)malloc(test_size * sizeof(uint8_t));    
   }
 
   // An image chunk
@@ -550,8 +550,8 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     int index = index_t->value->int32;
 
     // Save the chunk
-    //memcpy(&img_data[image_type->value->int32][index], chunk_data, chunk_size);    
-    memcpy(&test_data[index], chunk_data, chunk_size);
+    memcpy(&img_data[image_type->value->int32][index], chunk_data, chunk_size);    
+    //memcpy(&test_data[index], chunk_data, chunk_size);
   }
 
   // Complete?
@@ -562,12 +562,12 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     image_type = dict_find(iter, MESSAGE_KEY_ImageType);    
     //Show the image
     img_loaded[image_type->value->int32] = true;
-    /*if(image_type->value->int32 == IMAGE_TYPE_ALLY_SPRITE || image_type->value->int32 == IMAGE_TYPE_ALLY_SHINY_SPRITE){
+    if(image_type->value->int32 == IMAGE_TYPE_ALLY_SPRITE || image_type->value->int32 == IMAGE_TYPE_ALLY_SHINY_SPRITE){
       load_ally_image();
     } else if(image_type->value->int32 == IMAGE_TYPE_ENEMY_SPRITE){
       load_enemy_image();
-    }*/
-    load_enemy_image();
+    }
+    //load_enemy_image();
     
     //Store image locally TODO    
   }

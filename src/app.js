@@ -43,7 +43,7 @@ Pebble.addEventListener('ready', function() {
   console.log('PebbleKit JS ready!');
   RetrieveConfigData();
   
-  getAndTransmitImage('http://www.pokestadium.com/sprites/black-white/blastoise.png', IMAGE_TYPE_ENEMY_SPRITE, null);
+  getAndTransmitImage('http://www.pokestadium.com/sprites/black-white/mewtwo.png', IMAGE_TYPE_ENEMY_SPRITE, null);
   //SendConfig(); Reduce messages to pebble since config is stored on watch now.
 });
 
@@ -71,12 +71,17 @@ Pebble.addEventListener('webviewclosed', function(e) {
   SendConfig();
 });
 function getAndTransmitImage(url, imageType, callback) {
-  var retrieved = localStorage.getItem(url);
-  /*if(retrieved){
-    console.log(url + ' retrieved from local storage.')
+  var retrieved = JSON.parse(localStorage.getItem(url));  
+    
+  if(retrieved){
+    console.log(url + ' retrieved from local storage. Length:' + retrieved.length);
+    //var sliced = retrieved.slice(0, length);
+    console.log("original: " + retrieved);
+    //console.log("sliced: " + sliced);
+    //console.log('Legnth: ' + sliced.length);
     transmitImage(retrieved, imageType, callback);
     return;
-  }*/
+  }
   console.log('Requesting: ' + url);
   var request = new XMLHttpRequest();
   request.onload = function() {
@@ -87,7 +92,7 @@ function getAndTransmitImage(url, imageType, callback) {
     for(var i = 0; i < byteArray.byteLength; i++) {
       array.push(byteArray[i]);
     }
-    localStorage.setItem(url, array);
+    localStorage.setItem(url, JSON.stringify(array));
     transmitImage(array, imageType, callback);
   };
   request.responseType = "arraybuffer";
