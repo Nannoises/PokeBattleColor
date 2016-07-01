@@ -24,6 +24,38 @@
         "resources": {
             "media": [
                 {
+                    "file": "images/blastoise-mega.png",
+                    "name": "BLASTOISE",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/charizard-mega-y.png",
+                    "name": "CHARIZARD",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/charizard-mega-y-shiny.png",
+                    "name": "CHARIZARDSHINY",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/menu.png",
+                    "name": "MENU",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
                     "file": "images/sleep.png",
                     "name": "STATUS_SLEEP",
                     "targetPlatforms": [
@@ -34,15 +66,6 @@
                 {
                     "file": "images/paralysis.png",
                     "name": "STATUS_PARALYSIS",
-                    "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/menu.png",
-                    "menuIcon": true,
-                    "name": "MENU",
                     "targetPlatforms": [
                         "basalt"
                     ],

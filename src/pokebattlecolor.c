@@ -59,8 +59,11 @@ TextLayer *text_level_enemy_layer;
 
 static bool health_stats_set = false;
 
-static uint8_t *img_data[3];
-static int img_size[3];
+#define NUMBER_OF_POKEMON_SPRITES 3
+
+static uint8_t *img_data[NUMBER_OF_POKEMON_SPRITES];
+static int img_size[NUMBER_OF_POKEMON_SPRITES];
+static bool img_loaded[NUMBER_OF_POKEMON_SPRITES];
 
 void update_level_text()
 {
@@ -111,8 +114,8 @@ static void load_pokemon_name_layers(Layer *window_layer)
 static void load_ally_pokemon_layer(Layer *window_layer)
 {
   GRect bounds = layer_get_bounds(window_layer);  
-  bounds.origin.x -= 50;
-  bounds.origin.y += 12;
+  bounds.origin.x -= 45;
+  bounds.origin.y += 10;
 
   s_bitmap_layer = bitmap_layer_create(bounds);
   bitmap_layer_set_compositing_mode(s_bitmap_layer, GCompOpSet);
@@ -138,9 +141,17 @@ static void load_ally_image()
   
   // Create new GBitmap from downloaded PNG data
   if(shinyAlly){
-    s_bitmap = gbitmap_create_from_png_data(img_data[IMAGE_TYPE_ALLY_SHINY_SPRITE], img_size[IMAGE_TYPE_ALLY_SHINY_SPRITE]);
+    if(img_loaded[IMAGE_TYPE_ALLY_SHINY_SPRITE]){
+      s_bitmap = gbitmap_create_from_png_data(img_data[IMAGE_TYPE_ALLY_SHINY_SPRITE], img_size[IMAGE_TYPE_ALLY_SHINY_SPRITE]);  
+    } else {
+      s_bitmap = gbitmap_create_with_resource(RESOURCE_ID_CHARIZARDSHINY);
+    }        
   } else{
-    s_bitmap = gbitmap_create_from_png_data(img_data[IMAGE_TYPE_ALLY_SPRITE], img_size[IMAGE_TYPE_ALLY_SPRITE]);
+    if(img_loaded[IMAGE_TYPE_ALLY_SPRITE]){
+      s_bitmap = gbitmap_create_from_png_data(img_data[IMAGE_TYPE_ALLY_SPRITE], img_size[IMAGE_TYPE_ALLY_SPRITE]);      
+    } else {      
+      s_bitmap = gbitmap_create_with_resource(RESOURCE_ID_CHARIZARD);
+    }
   }
   APP_LOG(APP_LOG_LEVEL_DEBUG, "s_bitmap set. Bytes used: %zu Bytes free: %zu", heap_bytes_used(), heap_bytes_free());
 
@@ -160,7 +171,11 @@ static void load_enemy_image()
   }
   
   // Create new GBitmap from downloaded PNG data
-  e_bitmap = gbitmap_create_from_png_data(img_data[IMAGE_TYPE_ENEMY_SPRITE], img_size[IMAGE_TYPE_ENEMY_SPRITE]);
+  if(img_loaded[IMAGE_TYPE_ENEMY_SPRITE]){
+    e_bitmap = gbitmap_create_from_png_data(img_data[IMAGE_TYPE_ENEMY_SPRITE], img_size[IMAGE_TYPE_ENEMY_SPRITE]);
+  } else {
+    e_bitmap = gbitmap_create_with_resource(RESOURCE_ID_BLASTOISE);    
+  }  
   APP_LOG(APP_LOG_LEVEL_DEBUG, "e_bitmap set. Bytes used: %zu Bytes free: %zu", heap_bytes_used(), heap_bytes_free());
 
   // Show the image
@@ -309,37 +324,6 @@ static void load_level_text_layers(Layer *window_layer)
   update_level_text();
 }
 
-static void main_window_load(Window *window) {
-  Layer *window_layer = window_get_root_layer(window);
-  
-  load_ally_pokemon_layer(window_layer);
-  
-  load_enemy_pokemon_layer(window_layer);
-    
-  load_background_layer(window_layer);
-  
-  load_battery_layer(window_layer);
-  
-  load_hour_progression_layer(window_layer);
-  
-  load_time_text_layer(window_layer);
-  
-  load_date_text_layer(window_layer);
-  
-  load_ally_status_sleep_layer(window_layer);
-  
-  load_ally_status_par_layer(window_layer);
-  
-  load_pokemon_name_layers(window_layer);
-  
-  load_level_text_layers(window_layer);  
-}
-
-static void main_window_unload(Window *window) {
-  bitmap_layer_destroy(s_bitmap_layer);
-  bitmap_layer_destroy(e_bitmap_layer);
-}
-
 static void set_health_stats(){  
   HealthMetric metric = HealthMetricStepCount;
   time_t start = time_start_of_today();
@@ -413,6 +397,42 @@ static void set_health_stats(){
   layer_mark_dirty(hour_progression_layer);
 }
 
+static void main_window_load(Window *window) {
+  Layer *window_layer = window_get_root_layer(window);
+  
+  load_ally_pokemon_layer(window_layer);
+  
+  load_enemy_pokemon_layer(window_layer);
+    
+  load_background_layer(window_layer);
+  
+  load_battery_layer(window_layer);
+  
+  load_hour_progression_layer(window_layer);
+  
+  load_time_text_layer(window_layer);
+  
+  load_date_text_layer(window_layer);
+  
+  load_ally_status_sleep_layer(window_layer);
+  
+  load_ally_status_par_layer(window_layer);
+  
+  load_pokemon_name_layers(window_layer);
+  
+  load_level_text_layers(window_layer);
+  
+  set_health_stats();
+  
+  load_ally_image();
+  
+  load_enemy_image();
+}
+
+static void main_window_unload(Window *window) {
+  bitmap_layer_destroy(s_bitmap_layer);
+  bitmap_layer_destroy(e_bitmap_layer);
+}
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
 {    
  	static char time_text[] = "00:00";
@@ -471,6 +491,8 @@ static void handle_bluetooth(bool connected) {
 static void save_configured_data(){
   persist_write_string(ENEMY_NAME_PKEY, ENEMY_POKEMON_NAME);
   persist_write_string(ALLY_NAME_PKEY, ALLY_POKEMON_NAME);
+  
+  //Save image data TODO
 }
 
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
@@ -513,9 +535,12 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   // Complete?
   Tuple *complete_t = dict_find(iter, MESSAGE_KEY_AppKeyComplete);
   if(complete_t) {
-    image_type = dict_find(iter, MESSAGE_KEY_ImageType);    
-    // Show the image
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "Image completely transferred.");
+    image_type = dict_find(iter, MESSAGE_KEY_ImageType);
+    
+    //Show the image TODO
+    
+    //Store image locally TODO
+    
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Image completely transferred. Bytes used: %zu Bytes free: %zu", heap_bytes_used(), heap_bytes_free());        
   }
 }
@@ -527,6 +552,8 @@ static void retrieve_configured_data(){
   if(persist_exists(ALLY_NAME_PKEY)){
     persist_read_string(ALLY_NAME_PKEY, ALLY_POKEMON_NAME, strlen(ALLY_POKEMON_NAME) + 1);
   }
+  
+  //Retrieve image data TODO
 }
 
 void handle_init(void) {
@@ -551,9 +578,7 @@ void handle_init(void) {
 	window_stack_push(window, true); 
 
 	handle_minute_tick(tick_time, MINUTE_UNIT);
- 	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);  
-  
-  set_health_stats();
+ 	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);      
   
   battery_state_service_subscribe (&battery_state_handler);
   
