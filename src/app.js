@@ -10,10 +10,17 @@ var IMAGE_TYPE_ALLY_SPRITE = 0;
 var IMAGE_TYPE_ALLY_SHINY_SPRITE = 1;
 var IMAGE_TYPE_ENEMY_SPRITE = 2;
 
-var SendConfig = function(){
+var SendConfig = function(callback){
   // Send the object
-  Pebble.sendAppMessage(ConfigData, function() {
-    console.log('Message sent successfully: ' + JSON.stringify(ConfigData));
+  var dict = {
+    "EnemyName": (ConfigData.EnemyName.toUpperCase()),
+    "AllyName" : (ConfigData.AllyName.toUpperCase())
+  };
+  Pebble.sendAppMessage(dict, function() {
+    console.log('Message sent successfully: ' + JSON.stringify(dict));
+    if(callback && callback instanceof Function){
+      callback();
+    }
   }, function(e) {
     console.log('Message failed: ' + JSON.stringify(e));
   }); 
@@ -21,7 +28,10 @@ var SendConfig = function(){
 var RetrieveConfigData = function(){
   for(var key in ConfigData){ 
     var retrieved = localStorage.getItem(key.toString());
-    //console.log('Key: ' + key + ' RetrievedValue: ' + retrieved.toString());
+    if(retrieved === undefined || retrieved === null){
+      continue;
+    }
+    console.log('Key: ' + key + ' RetrievedValue: ' + retrieved.toString());
     if(retrieved){
       if(typeof retrieved == 'string' && retrieved.toLowerCase() == 'true')
         ConfigData[key] = 1;
@@ -43,7 +53,8 @@ Pebble.addEventListener('ready', function() {
   console.log('PebbleKit JS ready!');
   RetrieveConfigData();
   
-  getAndTransmitImage('http://www.pokestadium.com/sprites/black-white/mewtwo.png', IMAGE_TYPE_ENEMY_SPRITE, null);
+  //getAndTransmitImage('http://www.pokestadium.com/sprites/black-white/mewtwo.png', IMAGE_TYPE_ENEMY_SPRITE, null);
+  SendSprites();
   //SendConfig(); Reduce messages to pebble since config is stored on watch now.
 });
 
@@ -55,28 +66,43 @@ Pebble.addEventListener('showConfiguration', function() {
   }
   Pebble.openURL(url);
 });
-
+function SendSprites(callback){
+  getAndTransmitImage(ConfigData.AllySpriteUrl, IMAGE_TYPE_ALLY_SPRITE, function(){
+    getAndTransmitImage(ConfigData.AllyShinySpriteUrl, IMAGE_TYPE_ALLY_SHINY_SPRITE, function(){
+      getAndTransmitImage(ConfigData.EnemySpriteUrl, IMAGE_TYPE_ENEMY_SPRITE, function(){
+        if(callback && callback instanceof Function){
+          callback();
+        }
+      });    
+    });    
+  });   
+};
 Pebble.addEventListener('webviewclosed', function(e) {
   // Decode the user's preferences
   var responseData = JSON.parse(decodeURIComponent(e.response));  
-  for(var key in ConfigData){
-    if(typeof responseData[key] == 'string')
-      ConfigData[key] = responseData[key].toUpperCase();
-    else
-      ConfigData[key] = responseData[key] !== undefined;
-  }
-  
-  StoreConfigData();  
-  //console.log(JSON.stringify(ConfigData));
+  for(var key in ConfigData){    
+      ConfigData[key] = responseData[key];
+  }  
+  console.log(JSON.stringify(ConfigData));  
+  StoreConfigData();
+  //SendConfig(SendSprites);
+  //SendConfig(SendSprites);
+  //SendSprites(SendConfig);
   SendConfig();
+  SendSprites();
 });
 function getAndTransmitImage(url, imageType, callback) {
-  var retrieved = JSON.parse(localStorage.getItem(url));  
-    
+  if(!url || url === ''){
+    if(callback && callback instanceof Function){
+      callback();
+    }
+    return;
+  }
+  var retrieved = JSON.parse(localStorage.getItem(url));      
   if(retrieved){
     console.log(url + ' retrieved from local storage. Length:' + retrieved.length);
     //var sliced = retrieved.slice(0, length);
-    console.log("original: " + retrieved);
+    //console.log("original: " + retrieved);
     //console.log("sliced: " + sliced);
     //console.log('Legnth: ' + sliced.length);
     transmitImage(retrieved, imageType, callback);
@@ -131,7 +157,7 @@ function sendChunk(array, index, arrayLength, imageType, callback) {
   if(lastChunk){
     dict.AppKeyComplete = 0;
   }
-  console.log('Sending chunk ' + index + '. Chunk size: ' + chunkSize + ' Chunk data: ' + array.slice(index, index + chunkSize));
+  //console.log('Sending chunk ' + index + '. Chunk size: ' + chunkSize + ' Chunk data: ' + array.slice(index, index + chunkSize));
   // Send the chunk
   Pebble.sendAppMessage(dict, function() {
     console.log('Successfully sent chunk!');
