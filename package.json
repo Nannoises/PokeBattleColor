@@ -2,13 +2,13 @@
     "author": "birdmanherron@gmail.com",
     "dependencies": {},
     "keywords": [],
-    "name": "pokebattle-color",
+    "name": "pkebtle-cstm",
     "pebble": {
         "capabilities": [
             "configurable",
             "health"
         ],
-        "displayName": "PokeBattle Color",
+        "displayName": "PokeBattle Custom",
         "enableMultiJS": false,
         "messageKeys": [
             "EnemyName",
@@ -49,6 +49,7 @@
                 },
                 {
                     "file": "images/menu.png",
+                    "menuIcon": true,
                     "name": "MENU",
                     "targetPlatforms": [
                         "basalt"
@@ -119,10 +120,10 @@
         "targetPlatforms": [
             "basalt"
         ],
-        "uuid": "2d81b6f1-3a4a-4375-8e51-a978a29648e6",
+        "uuid": "7a0a5afc-61a6-469f-95e8-9b1690fff0f6",
         "watchapp": {
             "watchface": true
         }
     },
-    "version": "2.3.0"
+    "version": "1.0.0"
 }
