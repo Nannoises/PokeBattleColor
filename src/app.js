@@ -3,7 +3,8 @@ var ConfigData = {
   "AllyName" : "CHARIZARD",
   "AllySpriteUrl" : "",
   "AllyShinySpriteUrl" : "",
-  "EnemySpriteUrl" : ""
+  "EnemySpriteUrl" : "",
+  "Dither" : false
 };
 var BUFFER_SIZE = 8000;
 var IMAGE_TYPE_ALLY_SPRITE = 0;
@@ -97,6 +98,11 @@ function getAndTransmitImage(url, imageType, callback) {
       callback();
     }
     return;
+  }
+  //Call format route to format image for Pebble.
+  url = 'http://birdhelloworld.herokuapp.com/formatImage?ImageUrl=' + url;
+  if(ConfigData.Dither){
+    url += '&Dither=true';
   }
   var retrieved = JSON.parse(localStorage.getItem(url));      
   if(retrieved){
