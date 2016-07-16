@@ -101,7 +101,7 @@ function getAndTransmitImage(url, imageType, callback) {
   }
   //Call format route to format image for Pebble.
   url = 'http://birdhelloworld.herokuapp.com/formatImage?ImageUrl=' + url;
-  if(ConfigData.Dither){
+  if(ConfigData.Dither === true){
     url += '&Dither=true';
   }
   var retrieved = JSON.parse(localStorage.getItem(url));      
