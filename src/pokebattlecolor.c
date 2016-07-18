@@ -35,8 +35,9 @@ static BitmapLayer *ally_status_par_layer;
 
 static bool initiate_watchface = true;
 
-char *ALLY_POKEMON_NAME = "CHARIZARD    ";
-char *ENEMY_POKEMON_NAME = "BLASTOISE   ";
+char *ALLY_POKEMON_NAME = "CHARIZARD  ";
+char *ENEMY_POKEMON_NAME = "BLASTOISE  ";
+int pokemon_name_max_length = 10;
   
 static GFont level_font;
 int level_int = 1;
@@ -516,18 +517,16 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   // Read preferences
   Tuple *enemyName = dict_find(iter, MESSAGE_KEY_EnemyName);
   if(enemyName) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Found enemyName. %s", enemyName->value->cstring);
-    //ENEMY_POKEMON_NAME = "          ";
-    ENEMY_POKEMON_NAME = (char *)malloc(10 * sizeof(char));
-    strncpy(ENEMY_POKEMON_NAME, enemyName->value->cstring, 10);    
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Found enemyName. %s", enemyName->value->cstring);    
+    ENEMY_POKEMON_NAME = (char *)malloc((pokemon_name_max_length + 1) * sizeof(char));
+    strncpy(ENEMY_POKEMON_NAME, enemyName->value->cstring, (pokemon_name_max_length + 1));    
     text_layer_set_text(enemy_pokemon_name_layer, ENEMY_POKEMON_NAME);
   }
   Tuple *allyName = dict_find(iter, MESSAGE_KEY_AllyName);
   if(allyName){
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Found allyName. %s", allyName->value->cstring);
-    ALLY_POKEMON_NAME = (char *)malloc(10 * sizeof(char));
-    //ALLY_POKEMON_NAME = "          ";
-    strncpy(ALLY_POKEMON_NAME, allyName->value->cstring, 10);    
+    ALLY_POKEMON_NAME = (char *)malloc((pokemon_name_max_length + 1)* sizeof(char));    
+    strncpy(ALLY_POKEMON_NAME, allyName->value->cstring, (pokemon_name_max_length + 1));    
     text_layer_set_text(ally_pokemon_name_layer, ALLY_POKEMON_NAME);
   }
   Tuple *image_type;
