@@ -38,8 +38,8 @@ static BitmapLayer *ally_status_par_layer;
 
 static bool initiate_watchface = true;
 
-char *ALLY_POKEMON_NAME; //= "CHARIZARD  ";
-char *ENEMY_POKEMON_NAME;// = "BLASTOISE  ";
+char *ALLY_POKEMON_NAME; 
+char *ENEMY_POKEMON_NAME;
 int pokemon_name_max_length = 10;
   
 static GFont level_font;
@@ -123,7 +123,8 @@ static void load_ally_pokemon_layer(Layer *window_layer)
 {
   GRect bounds = layer_get_bounds(window_layer);  
   bounds.origin.x -= 45;
-  bounds.origin.y += 10;
+  bounds.origin.y += 47;  
+  bounds.size.h -= 85;
 
   s_bitmap_layer = bitmap_layer_create(bounds);
   bitmap_layer_set_compositing_mode(s_bitmap_layer, GCompOpSet);
@@ -429,11 +430,13 @@ static void main_window_load(Window *window) {
   
   //load_terrain_layer(window_layer);
   
+  load_background_layer(window_layer);
+  
   load_ally_pokemon_layer(window_layer);
   
   load_enemy_pokemon_layer(window_layer);
     
-  load_background_layer(window_layer);
+  //load_background_layer(window_layer);
   
   load_battery_layer(window_layer);
   
@@ -520,18 +523,6 @@ static void handle_bluetooth(bool connected) {
 static void save_configured_data(){
   persist_write_string(ENEMY_NAME_PKEY, ENEMY_POKEMON_NAME);
   persist_write_string(ALLY_NAME_PKEY, ALLY_POKEMON_NAME);
-  
-  //Save image data MAY NOT WORK AS LIMIT IS 256 bytes?
-  /*persist_write_data(SPRITE_SIZES_PKEY, &img_size, sizeof(img_size));
-  if(img_loaded[IMAGE_TYPE_ALLY_SPRITE]){
-    persist_write_data(ALLY_SPRITE_PKEY, img_data[IMAGE_TYPE_ALLY_SPRITE], img_size[IMAGE_TYPE_ALLY_SPRITE]);
-  }
-  if(img_loaded[IMAGE_TYPE_ALLY_SHINY_SPRITE]){
-    persist_write_data(ALLY_SHINY_SPRITE_PKEY, img_data[IMAGE_TYPE_ALLY_SHINY_SPRITE], img_size[IMAGE_TYPE_ALLY_SHINY_SPRITE]);
-  }
-  if(img_loaded[IMAGE_TYPE_ENEMY_SPRITE]){
-    persist_write_data(ENEMY_SPRITE_PKEY, img_data[IMAGE_TYPE_ENEMY_SPRITE], img_size[IMAGE_TYPE_ENEMY_SPRITE]);
-  }*/
 }
 
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
@@ -595,10 +586,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
       load_ally_image();
     } else if(image_type->value->int32 == IMAGE_TYPE_ENEMY_SPRITE){
       load_enemy_image();
-    }
-    //load_enemy_image();
-    
-    //Store image locally TODO    
+    }  
   }
 }
 
