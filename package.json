@@ -24,6 +24,14 @@
         "resources": {
             "media": [
                 {
+                    "file": "images/2016-07-21.png",
+                    "name": "GRASS_TERRAIN",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
                     "file": "images/blastoise-mega.png",
                     "name": "BLASTOISE",
                     "targetPlatforms": [

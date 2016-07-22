@@ -10,12 +10,13 @@ var BUFFER_SIZE = 8000;
 var IMAGE_TYPE_ALLY_SPRITE = 0;
 var IMAGE_TYPE_ALLY_SHINY_SPRITE = 1;
 var IMAGE_TYPE_ENEMY_SPRITE = 2;
+var POKEMON_NAME_MAX_LENGTH = 10;
 
 var SendConfig = function(callback){
   // Send the object
   var dict = {
-    "EnemyName": (ConfigData.EnemyName.toUpperCase()),
-    "AllyName" : (ConfigData.AllyName.toUpperCase())
+    "EnemyName": (ConfigData.EnemyName.substring(0, POKEMON_NAME_MAX_LENGTH).trim().toUpperCase()),
+    "AllyName" : (ConfigData.AllyName.substring(0, POKEMON_NAME_MAX_LENGTH).trim().toUpperCase())
   };
   Pebble.sendAppMessage(dict, function() {
     console.log('Message sent successfully: ' + JSON.stringify(dict));

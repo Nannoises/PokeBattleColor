@@ -24,6 +24,9 @@ static Layer *battery_layer;
 static GBitmap *background_image;
 static BitmapLayer *background_layer;
 
+static GBitmap *terrain_image;
+static BitmapLayer *terrain_layer;
+
 static uint8_t hour_progression;
 static Layer *hour_progression_layer;
 
@@ -35,8 +38,8 @@ static BitmapLayer *ally_status_par_layer;
 
 static bool initiate_watchface = true;
 
-char *ALLY_POKEMON_NAME = "CHARIZARD  ";
-char *ENEMY_POKEMON_NAME = "BLASTOISE  ";
+char *ALLY_POKEMON_NAME; //= "CHARIZARD  ";
+char *ENEMY_POKEMON_NAME;// = "BLASTOISE  ";
 int pokemon_name_max_length = 10;
   
 static GFont level_font;
@@ -140,8 +143,11 @@ static void load_enemy_pokemon_layer(Layer *window_layer)
 
 static void load_ally_image()
 {
-  if(s_bitmap){    
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Attempting to set s_bitmap. Bytes used: %zu Bytes free: %zu", heap_bytes_used(), heap_bytes_free());
+  if(s_bitmap){        
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Destroying ally bitmap.");
     gbitmap_destroy(s_bitmap);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "s_bitmap destroyed. Bytes used: %zu Bytes free: %zu", heap_bytes_used(), heap_bytes_free());
   }
   
   // Create new GBitmap from downloaded PNG data
@@ -171,8 +177,11 @@ static void load_ally_image()
 
 static void load_enemy_image()
 {
-  if(e_bitmap){    
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Attempting to set e_bitmap. Bytes used: %zu Bytes free: %zu", heap_bytes_used(), heap_bytes_free());
+  if(e_bitmap){   
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Destroying enemy bitmap.");
     gbitmap_destroy(e_bitmap);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "e_bitmap destroyed. Bytes used: %zu Bytes free: %zu", heap_bytes_used(), heap_bytes_free());
   }
   
   // Create new GBitmap from downloaded PNG data
@@ -199,10 +208,20 @@ static void load_background_layer(Layer *window_layer)
 {
   background_image = gbitmap_create_with_resource(RESOURCE_ID_BACKGROUND);
   background_layer = bitmap_layer_create(layer_get_frame(window_layer));
-  bitmap_layer_set_compositing_mode(background_layer, GCompOpSet);
+  bitmap_layer_set_compositing_mode(background_layer, GCompOpSet);    
   
   bitmap_layer_set_bitmap(background_layer, background_image);
  	layer_add_child(window_layer, bitmap_layer_get_layer(background_layer));
+}
+
+static void load_terrain_layer(Layer *window_layer)
+{
+  terrain_image = gbitmap_create_with_resource(RESOURCE_ID_GRASS_TERRAIN);
+  terrain_layer = bitmap_layer_create(layer_get_frame(window_layer));
+  bitmap_layer_set_compositing_mode(terrain_layer, GCompOpSet);    
+  
+  bitmap_layer_set_bitmap(terrain_layer, terrain_image);
+ 	layer_add_child(window_layer, bitmap_layer_get_layer(terrain_layer));
 }
 
 static void show_ally_status_sleep() 
@@ -408,6 +427,8 @@ static void set_health_stats(){
 static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   
+  //load_terrain_layer(window_layer);
+  
   load_ally_pokemon_layer(window_layer);
   
   load_enemy_pokemon_layer(window_layer);
@@ -517,7 +538,8 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   // Read preferences
   Tuple *enemyName = dict_find(iter, MESSAGE_KEY_EnemyName);
   if(enemyName) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Found enemyName. %s", enemyName->value->cstring);    
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Found enemyName. %s", enemyName->value->cstring); 
+    free(ENEMY_POKEMON_NAME);
     ENEMY_POKEMON_NAME = (char *)malloc((pokemon_name_max_length + 1) * sizeof(char));
     strncpy(ENEMY_POKEMON_NAME, enemyName->value->cstring, (pokemon_name_max_length + 1));    
     text_layer_set_text(enemy_pokemon_name_layer, ENEMY_POKEMON_NAME);
@@ -525,6 +547,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *allyName = dict_find(iter, MESSAGE_KEY_AllyName);
   if(allyName){
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Found allyName. %s", allyName->value->cstring);
+    free(ALLY_POKEMON_NAME);
     ALLY_POKEMON_NAME = (char *)malloc((pokemon_name_max_length + 1)* sizeof(char));    
     strncpy(ALLY_POKEMON_NAME, allyName->value->cstring, (pokemon_name_max_length + 1));    
     text_layer_set_text(ally_pokemon_name_layer, ALLY_POKEMON_NAME);
@@ -538,7 +561,8 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Image %ld size: %d", image_type->value->int32, img_size[image_type->value->int32]);
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "Image %ld size: %d", image_type->value->int32, test_size);
     
-    // Allocate buffer for image data    
+    // Allocate buffer for image data
+    free(img_data[image_type->value->int32]);
     img_data[image_type->value->int32] = (uint8_t*)malloc(img_size[image_type->value->int32] * sizeof(uint8_t));    
     //test_data = (uint8_t*)malloc(test_size * sizeof(uint8_t));    
   }
@@ -579,11 +603,21 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 }
 
 static void retrieve_configured_data(){
-  if(persist_exists(ENEMY_NAME_PKEY)){
-    persist_read_string(ENEMY_NAME_PKEY, ENEMY_POKEMON_NAME, strlen(ENEMY_POKEMON_NAME) + 1);
+  free(ENEMY_POKEMON_NAME);
+  ENEMY_POKEMON_NAME = (char *)malloc((pokemon_name_max_length + 1) * sizeof(char));
+  if(persist_exists(ENEMY_NAME_PKEY)){    
+    persist_read_string(ENEMY_NAME_PKEY, ENEMY_POKEMON_NAME, pokemon_name_max_length + 1);
   }
+  else{
+    ENEMY_POKEMON_NAME = "BLASTOISE";
+  }
+  free(ALLY_POKEMON_NAME);
+  ALLY_POKEMON_NAME = (char *)malloc((pokemon_name_max_length + 1)* sizeof(char));
   if(persist_exists(ALLY_NAME_PKEY)){
-    persist_read_string(ALLY_NAME_PKEY, ALLY_POKEMON_NAME, strlen(ALLY_POKEMON_NAME) + 1);
+    persist_read_string(ALLY_NAME_PKEY, ALLY_POKEMON_NAME, pokemon_name_max_length + 1);
+  }
+  else{
+    ALLY_POKEMON_NAME = "CHARIZARD";
   }
   
   //Retrieve image data TODO  
@@ -629,6 +663,15 @@ void handle_init(void) {
 
 void handle_deinit(void) {
   save_configured_data();
+  if(s_bitmap){    
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Destroying ally bitmap.");
+    gbitmap_destroy(s_bitmap);
+  }
+  if(e_bitmap){    
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Destroying enemy bitmap.");
+    gbitmap_destroy(e_bitmap);
+  }
+    
 	// Destroy the window
 	window_destroy(window);
 }
