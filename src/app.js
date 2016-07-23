@@ -54,10 +54,9 @@ Pebble.addEventListener('ready', function() {
   // PebbleKit JS is ready!
   console.log('PebbleKit JS ready!');
   RetrieveConfigData();
-  
-  //getAndTransmitImage('http://www.pokestadium.com/sprites/black-white/mewtwo.png', IMAGE_TYPE_ENEMY_SPRITE, null);
+    
+  //SendSprites();  
   SendSprites();
-  //SendConfig(); Reduce messages to pebble since config is stored on watch now.
 });
 
 Pebble.addEventListener('showConfiguration', function() {
@@ -68,6 +67,15 @@ Pebble.addEventListener('showConfiguration', function() {
   }
   Pebble.openURL(url);
 });
+function ShowNextPokemon(index){ //DEBUGGING REMOVE THIS
+  getAndTransmitImage("http://birdhelloworld.herokuapp.com/getMostRecentFrontSprite?Index=" + index, IMAGE_TYPE_ENEMY_SPRITE, function(){
+    setTimeout(function(){
+      if(index < 720){
+        ShowNextPokemon(index + 1);
+      }
+    }, 5000);
+  });
+};
 function SendSprites(callback){
   getAndTransmitImage(ConfigData.AllySpriteUrl, IMAGE_TYPE_ALLY_SPRITE, function(){
     getAndTransmitImage(ConfigData.AllyShinySpriteUrl, IMAGE_TYPE_ALLY_SHINY_SPRITE, function(){

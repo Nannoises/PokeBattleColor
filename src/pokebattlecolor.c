@@ -537,7 +537,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   }
   Tuple *allyName = dict_find(iter, MESSAGE_KEY_AllyName);
   if(allyName){
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Found allyName. %s", allyName->value->cstring);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Found allyName. %s", allyName->value->cstring);    
     free(ALLY_POKEMON_NAME);
     ALLY_POKEMON_NAME = (char *)malloc((pokemon_name_max_length + 1)* sizeof(char));    
     strncpy(ALLY_POKEMON_NAME, allyName->value->cstring, (pokemon_name_max_length + 1));    
@@ -597,7 +597,7 @@ static void retrieve_configured_data(){
     persist_read_string(ENEMY_NAME_PKEY, ENEMY_POKEMON_NAME, pokemon_name_max_length + 1);
   }
   else{
-    ENEMY_POKEMON_NAME = "BLASTOISE";
+    strcpy(ENEMY_POKEMON_NAME, "BLASTOISE");
   }
   free(ALLY_POKEMON_NAME);
   ALLY_POKEMON_NAME = (char *)malloc((pokemon_name_max_length + 1)* sizeof(char));
@@ -605,7 +605,7 @@ static void retrieve_configured_data(){
     persist_read_string(ALLY_NAME_PKEY, ALLY_POKEMON_NAME, pokemon_name_max_length + 1);
   }
   else{
-    ALLY_POKEMON_NAME = "CHARIZARD";
+    strcpy(ALLY_POKEMON_NAME, "CHARIZARD");
   }
   
   //Retrieve image data TODO  
