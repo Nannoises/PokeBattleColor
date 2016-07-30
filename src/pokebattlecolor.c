@@ -143,8 +143,11 @@ static void load_ally_pokemon_layer(Layer *window_layer)
   GRect bounds = layer_get_bounds(window_layer);  
   bounds.origin.x -= 45;
   bounds.origin.y += 47;  
-  bounds.size.h -= 85;
-
+  #if defined(PBL_RECT)
+    bounds.size.h -= 85;
+  #elif defined(PBL_ROUND)
+    bounds.size.h -= 94;
+  #endif  
   s_bitmap_layer = bitmap_layer_create(bounds);
   bitmap_layer_set_compositing_mode(s_bitmap_layer, GCompOpSet);
   layer_add_child(window_layer, bitmap_layer_get_layer(s_bitmap_layer));
