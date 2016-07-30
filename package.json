@@ -24,34 +24,28 @@
         "resources": {
             "media": [
                 {
+                    "file": "images/roundBackground.png",
+                    "name": "BACKGROUND",
+                    "targetPlatforms": [
+                        "chalk"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/ball.png",
+                    "name": "BALL",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "bitmap"
+                },
+                {
                     "file": "images/2016-07-21.png",
                     "name": "GRASS_TERRAIN",
                     "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/blastoise-mega.png",
-                    "name": "BLASTOISE",
-                    "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/charizard-mega-y.png",
-                    "name": "CHARIZARD",
-                    "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/charizard-mega-y-shiny.png",
-                    "name": "CHARIZARDSHINY",
-                    "targetPlatforms": [
-                        "basalt"
+                        "basalt",
+                        "chalk"
                     ],
                     "type": "bitmap"
                 },
@@ -60,7 +54,8 @@
                     "menuIcon": true,
                     "name": "MENU",
                     "targetPlatforms": [
-                        "basalt"
+                        "basalt",
+                        "chalk"
                     ],
                     "type": "bitmap"
                 },
@@ -68,7 +63,8 @@
                     "file": "images/sleep.png",
                     "name": "STATUS_SLEEP",
                     "targetPlatforms": [
-                        "basalt"
+                        "basalt",
+                        "chalk"
                     ],
                     "type": "bitmap"
                 },
@@ -76,7 +72,8 @@
                     "file": "images/paralysis.png",
                     "name": "STATUS_PARALYSIS",
                     "targetPlatforms": [
-                        "basalt"
+                        "basalt",
+                        "chalk"
                     ],
                     "type": "bitmap"
                 },
@@ -89,19 +86,11 @@
                     "type": "bitmap"
                 },
                 {
-                    "characterRegex": "[0-9]",
                     "file": "fonts/Pokemon_GB.ttf",
-                    "name": "FONT_LEVEL_10",
+                    "name": "FONT_DATE_7",
                     "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "font"
-                },
-                {
-                    "file": "fonts/Pokemon_GB.ttf",
-                    "name": "FONT_NAME_8",
-                    "targetPlatforms": [
-                        "basalt"
+                        "basalt",
+                        "chalk"
                     ],
                     "type": "font"
                 },
@@ -110,15 +99,27 @@
                     "file": "fonts/Pokemon_GB.ttf",
                     "name": "FONT_TIME_24",
                     "targetPlatforms": [
-                        "basalt"
+                        "basalt",
+                        "chalk"
                     ],
                     "type": "font"
                 },
                 {
                     "file": "fonts/Pokemon_GB.ttf",
-                    "name": "FONT_DATE_7",
+                    "name": "FONT_NAME_8",
                     "targetPlatforms": [
-                        "basalt"
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "font"
+                },
+                {
+                    "characterRegex": "[0-9]",
+                    "file": "fonts/Pokemon_GB.ttf",
+                    "name": "FONT_LEVEL_10",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
                     ],
                     "type": "font"
                 }
@@ -126,7 +127,8 @@
         },
         "sdkVersion": "3",
         "targetPlatforms": [
-            "basalt"
+            "basalt",
+            "chalk"
         ],
         "uuid": "8df91b1a-2aae-4072-8926-4c6724b80b0c",
         "watchapp": {

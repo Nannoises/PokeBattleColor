@@ -82,18 +82,28 @@ void update_level_text()
 }
 
 static void load_time_text_layer(Layer *window_layer)
-{
-  text_time_layer = text_layer_create(GRect(12, 132, 124, 30));
+{  
+  GRect window_layer_frame = layer_get_frame(window_layer);
+  #if defined(PBL_RECT)
+    GRect text_layer_frame = GRect(window_layer_frame.size.w / 12, (window_layer_frame.size.h * 11) / 14, (window_layer_frame.size.w * 5) / 6 , window_layer_frame.size.h / 6);
+  #elif defined(PBL_ROUND)
+    GRect text_layer_frame = GRect((window_layer_frame.size.w / 12) - 2, ((window_layer_frame.size.h * 3) / 4) + 2, ((window_layer_frame.size.w * 5) / 6) + 4, window_layer_frame.size.h / 4);
+  #endif  
+  text_time_layer = text_layer_create(text_layer_frame);
  	text_layer_set_text_alignment(text_time_layer, GTextAlignmentCenter);
  	text_layer_set_text_color(text_time_layer, GColorBlack);
- 	text_layer_set_background_color(text_time_layer, GColorClear);
+ 	text_layer_set_background_color(text_time_layer, GColorFromRGB(85, 170, 170));
  	text_layer_set_font(text_time_layer, time_font);
  	layer_add_child(window_layer, text_layer_get_layer(text_time_layer));  
 }
 
 static void load_date_text_layer(Layer *window_layer)
 {
-  text_date_layer = text_layer_create(GRect(60, 106, 76, 10));	
+  #if defined(PBL_RECT)
+    text_date_layer = text_layer_create(GRect(60, 106, 76, 10));	
+  #elif defined(PBL_ROUND)
+    text_date_layer = text_layer_create(GRect(85, 110, 76, 10));
+  #endif  
 	text_layer_set_text_alignment(text_date_layer, GTextAlignmentRight);
  	text_layer_set_text_color(text_date_layer, GColorBlack);
  	text_layer_set_background_color(text_date_layer, GColorClear);
@@ -104,14 +114,23 @@ static void load_date_text_layer(Layer *window_layer)
 static void load_pokemon_name_layers(Layer *window_layer)
 {  
   pokemon_name_font  = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_NAME_8));
-  ally_pokemon_name_layer = text_layer_create(GRect(70,78,120,12));
+  #if defined(PBL_RECT)
+    ally_pokemon_name_layer = text_layer_create(GRect(70,78,120,12));
+  #elif defined(PBL_ROUND)
+    ally_pokemon_name_layer = text_layer_create(GRect(95,84,120,12));
+  #endif
+
   text_layer_set_text_color(ally_pokemon_name_layer, GColorBlack);
  	text_layer_set_background_color(ally_pokemon_name_layer, GColorClear);
   text_layer_set_font(ally_pokemon_name_layer, pokemon_name_font);
  	layer_add_child(window_layer, text_layer_get_layer(ally_pokemon_name_layer));
   text_layer_set_text(ally_pokemon_name_layer, ALLY_POKEMON_NAME);
   
-  enemy_pokemon_name_layer = text_layer_create(GRect(5,2,120,12));
+  #if defined(PBL_RECT)
+    enemy_pokemon_name_layer = text_layer_create(GRect(5,2,120,12));
+  #elif defined(PBL_ROUND)
+    enemy_pokemon_name_layer = text_layer_create(GRect(37,15,120,12));
+  #endif  
   text_layer_set_text_color(enemy_pokemon_name_layer, GColorBlack);
  	text_layer_set_background_color(enemy_pokemon_name_layer, GColorClear);
   text_layer_set_font(enemy_pokemon_name_layer, pokemon_name_font);
@@ -156,13 +175,13 @@ static void load_ally_image()
     if(img_loaded[IMAGE_TYPE_ALLY_SHINY_SPRITE]){
       s_bitmap = gbitmap_create_from_png_data(img_data[IMAGE_TYPE_ALLY_SHINY_SPRITE], img_size[IMAGE_TYPE_ALLY_SHINY_SPRITE]);  
     } else {
-      s_bitmap = gbitmap_create_with_resource(RESOURCE_ID_CHARIZARDSHINY);
+      s_bitmap = gbitmap_create_with_resource(RESOURCE_ID_BALL);
     }        
   } else{
     if(img_loaded[IMAGE_TYPE_ALLY_SPRITE]){
       s_bitmap = gbitmap_create_from_png_data(img_data[IMAGE_TYPE_ALLY_SPRITE], img_size[IMAGE_TYPE_ALLY_SPRITE]);      
     } else {      
-      s_bitmap = gbitmap_create_with_resource(RESOURCE_ID_CHARIZARD);
+      s_bitmap = gbitmap_create_with_resource(RESOURCE_ID_BALL);
     }
   }
   APP_LOG(APP_LOG_LEVEL_DEBUG, "s_bitmap set. Bytes used: %zu Bytes free: %zu", heap_bytes_used(), heap_bytes_free());
@@ -192,7 +211,7 @@ static void load_enemy_image()
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "Attempting to set e_bitmap to img of size: %d and first value of %d", test_size,test_data[0]);  
     //e_bitmap = gbitmap_create_from_png_data(test_data, test_size);
   } else {
-    e_bitmap = gbitmap_create_with_resource(RESOURCE_ID_BLASTOISE);    
+    e_bitmap = gbitmap_create_with_resource(RESOURCE_ID_BALL);    
   }  
   APP_LOG(APP_LOG_LEVEL_DEBUG, "e_bitmap set. Bytes used: %zu Bytes free: %zu", heap_bytes_used(), heap_bytes_free());
 
@@ -208,21 +227,16 @@ static void load_enemy_image()
 static void load_background_layer(Layer *window_layer)
 {
   background_image = gbitmap_create_with_resource(RESOURCE_ID_BACKGROUND);
-  background_layer = bitmap_layer_create(layer_get_frame(window_layer));
+  GRect background_frame = layer_get_frame(window_layer);
+  #if defined(PBL_RECT)    
+  #elif defined(PBL_ROUND)
+    background_frame.size.h = 137;
+  #endif  
+  background_layer = bitmap_layer_create(background_frame);
   bitmap_layer_set_compositing_mode(background_layer, GCompOpSet);    
   
   bitmap_layer_set_bitmap(background_layer, background_image);
  	layer_add_child(window_layer, bitmap_layer_get_layer(background_layer));
-}
-
-static void load_terrain_layer(Layer *window_layer)
-{
-  terrain_image = gbitmap_create_with_resource(RESOURCE_ID_GRASS_TERRAIN);
-  terrain_layer = bitmap_layer_create(layer_get_frame(window_layer));
-  bitmap_layer_set_compositing_mode(terrain_layer, GCompOpSet);    
-  
-  bitmap_layer_set_bitmap(terrain_layer, terrain_image);
- 	layer_add_child(window_layer, bitmap_layer_get_layer(terrain_layer));
 }
 
 static void show_ally_status_sleep() 
@@ -237,7 +251,11 @@ static void hide_ally_status_sleep_layer()
 
 static void load_ally_status_sleep_layer(Layer *window_layer)
 {
-  ally_status_sleep_layer = bitmap_layer_create(GRect(85, 118, 50, 10));
+  #if defined(PBL_RECT)
+    ally_status_sleep_layer = bitmap_layer_create(GRect(85, 118, 50, 10));
+  #elif defined(PBL_ROUND)
+    ally_status_sleep_layer = bitmap_layer_create(GRect(107, 122, 50, 10));
+  #endif    
   if(ally_status_sleep_image) {
     gbitmap_destroy(ally_status_sleep_image);
     ally_status_sleep_image = NULL;
@@ -260,7 +278,11 @@ static void hide_ally_status_par_layer()
 
 static void load_ally_status_par_layer(Layer *window_layer)
 {
-  ally_status_par_layer = bitmap_layer_create(GRect(60, 118, 50, 10));
+  #if defined(PBL_RECT)
+     ally_status_par_layer = bitmap_layer_create(GRect(60, 118, 50, 10));
+  #elif defined(PBL_ROUND)
+     ally_status_par_layer = bitmap_layer_create(GRect(82, 122, 50, 10));
+  #endif  
   if(ally_status_par_image) {
     gbitmap_destroy(ally_status_par_image);
     ally_status_par_image = NULL;
@@ -313,7 +335,11 @@ static void load_battery_layer(Layer *window_layer)
  	BatteryChargeState initial = battery_state_service_peek();  
  	battery_level = initial.charge_percent;
  	battery_plugged = initial.is_plugged;
- 	battery_layer = layer_create(GRect(88,100,50,3));
+  #if defined(PBL_RECT)
+     	battery_layer = layer_create(GRect(88,100,50,3));
+  #elif defined(PBL_ROUND)
+     	battery_layer = layer_create(GRect(115,104,50,3));
+  #endif  
  	layer_set_update_proc(battery_layer, &battery_layer_update_callback);  
   layer_add_child(window_layer, battery_layer);
 }
@@ -328,21 +354,33 @@ void hour_progression_layer_update_callback(Layer *layer, GContext *ctx)
 
 static void load_hour_progression_layer(Layer *window_layer)
 {
-  hour_progression_layer = layer_create(GRect(21, 31, 50, 3));
+  #if defined(PBL_RECT)
+    hour_progression_layer = layer_create(GRect(21, 31, 50, 3));
+  #elif defined(PBL_ROUND)
+    hour_progression_layer = layer_create(GRect(41, 35, 50, 3));
+  #endif    
   layer_set_update_proc(hour_progression_layer, &hour_progression_layer_update_callback);
   layer_add_child(window_layer, hour_progression_layer);
 }
 
 static void load_level_text_layers(Layer *window_layer)
 {
-  text_level_enemy_layer = text_layer_create(GRect(19, 17, 70, 12));
+  #if defined(PBL_RECT)
+    text_level_enemy_layer = text_layer_create(GRect(19, 17, 70, 12));	
+  #elif defined(PBL_ROUND)
+    text_level_enemy_layer = text_layer_create(GRect(35, 21, 70, 12));
+  #endif    
  	text_layer_set_text_alignment(text_level_enemy_layer, GTextAlignmentLeft);
  	text_layer_set_text_color(text_level_enemy_layer, GColorBlack);
  	text_layer_set_background_color(text_level_enemy_layer, GColorClear);
  	text_layer_set_font(text_level_enemy_layer, level_font);
  	layer_add_child(window_layer, text_layer_get_layer(text_level_enemy_layer));
 
- 	text_level_ally_layer = text_layer_create(GRect(85, 86, 70, 12));
+  #if defined(PBL_RECT)
+    text_level_ally_layer = text_layer_create(GRect(85, 86, 70, 12));
+  #elif defined(PBL_ROUND)
+    text_level_ally_layer = text_layer_create(GRect(110, 90, 70, 12));
+  #endif   	
  	text_layer_set_text_alignment(text_level_ally_layer, GTextAlignmentLeft);
  	text_layer_set_text_color(text_level_ally_layer, GColorBlack);
  	text_layer_set_background_color(text_level_ally_layer, GColorClear);
@@ -421,23 +459,19 @@ static void set_health_stats(){
   }
   update_level_text();
   
-  hour_progression = ((1 - (double)stepsToday / averageStepsByNow)) * 100;
+  hour_progression = ((1 - (double)stepsToday / averageStepsByNow)) * 100;  
   layer_mark_dirty(hour_progression_layer);
 }
 
 static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
-  
-  //load_terrain_layer(window_layer);
-  
+
   load_background_layer(window_layer);
   
   load_ally_pokemon_layer(window_layer);
   
   load_enemy_pokemon_layer(window_layer);
     
-  //load_background_layer(window_layer);
-  
   load_battery_layer(window_layer);
   
   load_hour_progression_layer(window_layer);
