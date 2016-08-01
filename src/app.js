@@ -191,3 +191,9 @@ function sendChunk(array, index, arrayLength, imageType, callback) {
     console.log('Failed to send chunk with index ' + index);
   });
 };
+Pebble.addEventListener('appmessage', function(e) {
+  // Get the dictionary from the message
+  var dict = e.payload;
+  console.log('Got message: ' + JSON.stringify(dict));
+  SendSprites();
+});

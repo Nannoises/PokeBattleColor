@@ -538,11 +538,19 @@ void battery_state_handler(BatteryChargeState charge) {
   layer_mark_dirty(battery_layer);
 }
 
+static void send_message_to_phone(){
+  DictionaryIterator *iter;
+  app_message_outbox_begin(&iter);
+  dict_write_end(iter);
+  app_message_outbox_send();
+}
+
 static void handle_bluetooth(bool connected) {	
 	if (connected) {
     hide_ally_status_sleep_layer();
 		if (!initiate_watchface) {
 			vibes_double_pulse();
+      send_message_to_phone();
 		}
 	}
 	else {
