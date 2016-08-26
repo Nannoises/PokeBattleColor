@@ -4,13 +4,15 @@ var ConfigData = {
   "AllySpriteUrl" : "",
   "AllyShinySpriteUrl" : "",
   "EnemySpriteUrl" : "",
-  "Dither" : false
+  "RandomMode" : false
 };
 var BUFFER_SIZE = 8000;
 var IMAGE_TYPE_ALLY_SPRITE = 0;
 var IMAGE_TYPE_ALLY_SHINY_SPRITE = 1;
 var IMAGE_TYPE_ENEMY_SPRITE = 2;
 var POKEMON_NAME_MAX_LENGTH = 10;
+var NUMBER_OF_POKEMON = 720;
+var lastRandomHour = -1;
 
 var SendConfig = function(callback){
   // Send the object
@@ -54,26 +56,73 @@ Pebble.addEventListener('ready', function() {
   // PebbleKit JS is ready!
   console.log('PebbleKit JS ready!');
   RetrieveConfigData();
-    
-  //SendSprites();  
-  SendSprites();
+
+  if(ConfigData.RandomMode === true){
+    ShowNewPokemonEachHour();
+  } else {    
+    SendSprites();  
+  }  
 });
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'http://birdhelloworld.herokuapp.com/custom?';
+  var url = 'http://birdhelloworld.herokuapp.com/custom-beta?';
   for(var key in ConfigData){
     if(ConfigData[key] !== undefined)
       url += (key.toString() + '=' + ConfigData[key].toString() + '&');
   }
   Pebble.openURL(url);
 });
-function ShowNextPokemon(index){ //DEBUGGING REMOVE THIS
-  getAndTransmitImage("http://birdhelloworld.herokuapp.com/getMostRecentFrontSprite?Index=" + index, IMAGE_TYPE_ENEMY_SPRITE, function(){
-    setTimeout(function(){
-      if(index < 720){
-        ShowNextPokemon(index + 1);
-      }
-    }, 5000);
+function GetPokemonName(index, callback){
+  var url = "http://birdhelloworld.herokuapp.com/pokemonName?Index=" + index;
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function () {
+    console.log('Name retrieved: ' + this.responseText);
+    if(callback && callback instanceof Function){
+      callback(this.responseText);
+    }    
+  };
+  xhr.open('GET', url);
+  xhr.send();  
+};
+function ShowNewPokemonEachHour(){
+  if(ConfigData.RandomMode !== true){
+    return;
+  }
+  
+  var nextDate = new Date();  
+  if(nextDate.getHours() == lastRandomHour){
+    return;
+  }
+  lastRandomHour = nextDate.getHours();
+  nextDate.setHours(nextDate.getHours() + 1);
+  nextDate.setMinutes(0);
+  nextDate.setSeconds(0);
+  
+  ShowRandomPokemon();
+  var difference = nextDate - new Date();  
+  setTimeout(ShowNewPokemonEachHour, difference);  
+};
+function ShowRandomPokemon(callback){
+  var randomPoke1 = Math.floor(Math.random() * (NUMBER_OF_POKEMON + 1));
+  var randomPoke2 = Math.floor(Math.random() * (NUMBER_OF_POKEMON + 1));
+  var enemyImageUrl = "http://birdhelloworld.herokuapp.com/getMostRecentFrontSprite?Index=" + randomPoke1;
+  var allyImageUrl = "http://birdhelloworld.herokuapp.com/getMostRecentBackSprite?Index=" + randomPoke2;
+  var shinyAllyImageUrl = "http://birdhelloworld.herokuapp.com/getMostRecentBackSpriteShiny?Index=" + randomPoke2;  
+  getAndTransmitImage(enemyImageUrl, IMAGE_TYPE_ENEMY_SPRITE, function(){
+    getAndTransmitImage(allyImageUrl, IMAGE_TYPE_ALLY_SPRITE, function(){
+      getAndTransmitImage(shinyAllyImageUrl, IMAGE_TYPE_ALLY_SHINY_SPRITE, function(){
+        GetPokemonName(randomPoke1, function(name){
+          ConfigData.EnemyName = name;
+          GetPokemonName(randomPoke2, function(name){
+            ConfigData.AllyName = name;
+            SendConfig();
+          });
+        });
+        if(callback && callback instanceof Function){
+          callback();
+        }
+      });
+    });
   });
 };
 function SendSprites(callback){
@@ -89,17 +138,22 @@ function SendSprites(callback){
 };
 Pebble.addEventListener('webviewclosed', function(e) {
   // Decode the user's preferences
-  var responseData = JSON.parse(decodeURIComponent(e.response));  
-  for(var key in ConfigData){    
-      ConfigData[key] = responseData[key];
+  var responseData = JSON.parse(decodeURIComponent(e.response));    
+  for(var key in ConfigData){
+      if(key == 'RandomMode'){
+        ConfigData.RandomMode = responseData[key] == 1;
+      } else {
+        ConfigData[key] = responseData[key];
+      }
   }  
   console.log(JSON.stringify(ConfigData));  
   StoreConfigData();
-  //SendConfig(SendSprites);
-  //SendConfig(SendSprites);
-  //SendSprites(SendConfig);
-  SendConfig();
-  SendSprites();
+  if(ConfigData.RandomMode === true){
+    ShowNewPokemonEachHour();
+  } else {
+    SendConfig();
+    SendSprites();  
+  }  
 });
 function getAndTransmitImage(url, imageType, callback) {
   if(!url || url === ''){
