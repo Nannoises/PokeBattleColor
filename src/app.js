@@ -4,7 +4,8 @@ var ConfigData = {
   "AllySpriteUrl" : "",
   "AllyShinySpriteUrl" : "",
   "EnemySpriteUrl" : "",
-  "RandomMode" : false
+  "RandomMode" : false,
+  "LastRandomHour" : -1
 };
 var BUFFER_SIZE = 8000;
 var IMAGE_TYPE_ALLY_SPRITE = 0;
@@ -12,7 +13,7 @@ var IMAGE_TYPE_ALLY_SHINY_SPRITE = 1;
 var IMAGE_TYPE_ENEMY_SPRITE = 2;
 var POKEMON_NAME_MAX_LENGTH = 10;
 var NUMBER_OF_POKEMON = 720;
-var lastRandomHour = -1;
+var HourlyPokemonTimeout = undefined;
 
 var SendConfig = function(callback){
   // Send the object
@@ -38,9 +39,9 @@ var RetrieveConfigData = function(){
     console.log('Key: ' + key + ' RetrievedValue: ' + retrieved.toString());
     if(retrieved){
       if(typeof retrieved == 'string' && retrieved.toLowerCase() == 'true')
-        ConfigData[key] = 1;
+        ConfigData[key] = true;
       else if(typeof retrieved == 'string' && retrieved.toLowerCase() == 'false')
-        ConfigData[key] = 0;
+        ConfigData[key] = false;
       else
         ConfigData[key] = retrieved;
     }
@@ -85,44 +86,49 @@ function GetPokemonName(index, callback){
   xhr.send();  
 };
 function ShowNewPokemonEachHour(){
+  console.log("ShowNewPokemonEachHour called!");
   if(ConfigData.RandomMode !== true){
+    console.log("Random mode not enabled, bailing!");
     return;
   }
   
   var nextDate = new Date();  
-  if(nextDate.getHours() == lastRandomHour){
-    return;
+  var currentHour = nextDate.getHours();
+  if(currentHour != ConfigData.LastRandomHour){
+    ConfigData.LastRandomHour = new Date().getHours();
+    ShowRandomPokemon();
+  } else{
+    SendSprites();
   }
-  lastRandomHour = nextDate.getHours();
-  nextDate.setHours(nextDate.getHours() + 1);
+  
+  nextDate.setHours(currentHour + 1);
   nextDate.setMinutes(0);
   nextDate.setSeconds(0);
   
-  ShowRandomPokemon();
-  var difference = nextDate - new Date();  
-  setTimeout(ShowNewPokemonEachHour, difference);  
+  var difference = nextDate - new Date();
+  if(HourlyPokemonTimeout !== undefined){
+    clearTimeout(HourlyPokemonTimeout);
+  }
+  HourlyPokemonTimeout = setTimeout(ShowNewPokemonEachHour, difference);
 };
 function ShowRandomPokemon(callback){
   var randomPoke1 = Math.floor(Math.random() * (NUMBER_OF_POKEMON + 1));
   var randomPoke2 = Math.floor(Math.random() * (NUMBER_OF_POKEMON + 1));
-  var enemyImageUrl = "http://birdhelloworld.herokuapp.com/getMostRecentFrontSprite?Index=" + randomPoke1;
-  var allyImageUrl = "http://birdhelloworld.herokuapp.com/getMostRecentBackSprite?Index=" + randomPoke2;
-  var shinyAllyImageUrl = "http://birdhelloworld.herokuapp.com/getMostRecentBackSpriteShiny?Index=" + randomPoke2;  
-  getAndTransmitImage(enemyImageUrl, IMAGE_TYPE_ENEMY_SPRITE, function(){
-    getAndTransmitImage(allyImageUrl, IMAGE_TYPE_ALLY_SPRITE, function(){
-      getAndTransmitImage(shinyAllyImageUrl, IMAGE_TYPE_ALLY_SHINY_SPRITE, function(){
-        GetPokemonName(randomPoke1, function(name){
-          ConfigData.EnemyName = name;
-          GetPokemonName(randomPoke2, function(name){
-            ConfigData.AllyName = name;
-            SendConfig();
-          });
-        });
-        if(callback && callback instanceof Function){
-          callback();
-        }
-      });
-    });
+  ConfigData.EnemySpriteUrl = "http://birdhelloworld.herokuapp.com/getMostRecentFrontSprite?Index=" + randomPoke1;
+  ConfigData.AllySpriteUrl = "http://birdhelloworld.herokuapp.com/getMostRecentBackSprite?Index=" + randomPoke2;
+  ConfigData.AllyShinySpriteUrl = "http://birdhelloworld.herokuapp.com/getMostRecentBackSpriteShiny?Index=" + randomPoke2;
+  SendSprites(function(){
+     GetPokemonName(randomPoke1, function(name){
+       ConfigData.EnemyName = name;
+       GetPokemonName(randomPoke2, function(name){
+         ConfigData.AllyName = name;
+         SendConfig();
+         StoreConfigData();
+         if(callback && callback instanceof Function){
+           callback();
+         }
+       });
+     });
   });
 };
 function SendSprites(callback){
