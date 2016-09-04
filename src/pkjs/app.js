@@ -255,5 +255,7 @@ Pebble.addEventListener('appmessage', function(e) {
   // Get the dictionary from the message
   var dict = e.payload;
   console.log('Got message: ' + JSON.stringify(dict));
-  SendSprites();
+  if(ConfigData.RandomMode === true){
+    ShowNewPokemonEachHour();
+  }
 });

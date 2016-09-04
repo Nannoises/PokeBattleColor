@@ -502,6 +502,14 @@ static void main_window_unload(Window *window) {
   bitmap_layer_destroy(s_bitmap_layer);
   bitmap_layer_destroy(e_bitmap_layer);
 }
+
+static void send_message_to_phone(){
+  DictionaryIterator *iter;
+  app_message_outbox_begin(&iter);
+  dict_write_end(iter);
+  app_message_outbox_send();
+}
+
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
 {    
  	static char time_text[] = "00:00";
@@ -523,9 +531,12 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
   text_layer_set_text(text_time_layer, time_text);
  	text_layer_set_text(text_date_layer, date_text);
 
-  if(tick_time->tm_min % 5 == 0 && !health_stats_set){
-    set_health_stats();
+  if(tick_time->tm_min % 5 == 0 && !health_stats_set){    
+    set_health_stats();    
     health_stats_set = true;
+    if(tick_time->tm_min == 0){
+      send_message_to_phone();
+    }
   }
   else{
     health_stats_set = false;
@@ -538,14 +549,10 @@ void battery_state_handler(BatteryChargeState charge) {
   layer_mark_dirty(battery_layer);
 }
 
-static void send_message_to_phone(){
-  DictionaryIterator *iter;
-  app_message_outbox_begin(&iter);
-  dict_write_end(iter);
-  app_message_outbox_send();
-}
-
 static void handle_bluetooth(bool connected) {	
+  if(!initiate_watchface){
+    return;
+  }
 	if (connected) {
     hide_ally_status_sleep_layer();
 		if (!initiate_watchface) {
@@ -553,15 +560,12 @@ static void handle_bluetooth(bool connected) {
       send_message_to_phone();
 		}
 	}
-	else {
-		// if the watchface gets started in a disconnected state it will show the SLP-screen, but won't vibrate (that would be annoying while browsing through your watchfaces)
-    show_ally_status_sleep();
-		if (!initiate_watchface) {      
-			vibes_enqueue_custom_pattern( (VibePattern) {
-   				.durations = (uint32_t []) {100, 100, 100, 100, 100},
-   				.num_segments = 5
-			} );
-		}	
+	else {		
+    show_ally_status_sleep();		  
+    vibes_enqueue_custom_pattern( (VibePattern) {
+      .durations = (uint32_t []) {100, 100, 100, 100, 100},
+        .num_segments = 5
+    } );		
 	}
 }
 
