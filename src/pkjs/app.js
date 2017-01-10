@@ -13,7 +13,7 @@ var IMAGE_TYPE_ALLY_SHINY_SPRITE = 1;
 var IMAGE_TYPE_ENEMY_SPRITE = 2;
 var POKEMON_NAME_MAX_LENGTH = 10;
 var NUMBER_OF_POKEMON = 720;
-var HourlyPokemonTimeout = undefined;
+var HourlyPokemonTimeout;
 
 var SendConfig = function(callback){
   // Send the object
@@ -95,7 +95,7 @@ function ShowNewPokemonEachHour(){
   var nextDate = new Date();  
   var currentHour = nextDate.getHours();
   if(currentHour != ConfigData.LastRandomHour){
-    ConfigData.LastRandomHour = new Date().getHours();
+    ConfigData.LastRandomHour = currentHour;
     ShowRandomPokemon();
   } else{
     SendSprites();
@@ -173,16 +173,13 @@ function getAndTransmitImage(url, imageType, callback) {
   if(ConfigData.Dither === true){
     url += '&Dither=true';
   }
+  /*  Disabling sprite caching.  
   var retrieved = JSON.parse(localStorage.getItem(url));      
   if(retrieved){
     console.log(url + ' retrieved from local storage. Length:' + retrieved.length);
-    //var sliced = retrieved.slice(0, length);
-    //console.log("original: " + retrieved);
-    //console.log("sliced: " + sliced);
-    //console.log('Legnth: ' + sliced.length);
     transmitImage(retrieved, imageType, callback);
     return;
-  }
+  }*/
   console.log('Requesting: ' + url);
   var request = new XMLHttpRequest();
   request.onload = function() {
@@ -193,7 +190,8 @@ function getAndTransmitImage(url, imageType, callback) {
     for(var i = 0; i < byteArray.byteLength; i++) {
       array.push(byteArray[i]);
     }
-    localStorage.setItem(url, JSON.stringify(array));
+    //Disabling sprite caching.
+    //localStorage.setItem(url, JSON.stringify(array));
     transmitImage(array, imageType, callback);
   };
   request.responseType = "arraybuffer";
