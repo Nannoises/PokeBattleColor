@@ -174,12 +174,16 @@ function getAndTransmitImage(url, imageType, callback) {
   if(ConfigData.Dither === true){
     url += '&Dither=true';
   }
-  var localStorageKey = "SpriteStorage" + imageType;
-  var retrieved = JSON.parse(localStorage.getItem(localStorageKey));      
-  if(retrieved){
-    console.log(url + ' retrieved from local storage. Length:' + retrieved.length);
-    transmitImage(retrieved, imageType, callback);
-    return;
+  var currentUrlStorageKey = "URL" + imageType;
+  var currentUrl = localStorage.getItem(currentUrlStorageKey);
+  var spriteStorageKey = "SpriteStorage" + imageType;
+  if(currentUrl && currentUrl == url){
+    var retrieved = JSON.parse(localStorage.getItem(spriteStorageKey));      
+    if(retrieved){
+      console.log(url + ' retrieved from local storage. Length:' + retrieved.length);
+      transmitImage(retrieved, imageType, callback);
+      return;
+    }
   }
   console.log('Requesting: ' + url);
   var request = new XMLHttpRequest();
@@ -192,7 +196,8 @@ function getAndTransmitImage(url, imageType, callback) {
       array.push(byteArray[i]);
     }
     
-    localStorage.setItem(localStorageKey, JSON.stringify(array));
+    localStorage.setItem(currentUrlStorageKey, url);
+    localStorage.setItem(spriteStorageKey, JSON.stringify(array));
     transmitImage(array, imageType, callback);
   };
   request.responseType = "arraybuffer";
