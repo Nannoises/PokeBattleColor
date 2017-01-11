@@ -168,18 +168,19 @@ function getAndTransmitImage(url, imageType, callback) {
     }
     return;
   }
+  
   //Call format route to format image for Pebble.
   url = 'http://birdhelloworld.herokuapp.com/formatImage?ImageUrl=' + url;
   if(ConfigData.Dither === true){
     url += '&Dither=true';
   }
-  /*  Disabling sprite caching.  
-  var retrieved = JSON.parse(localStorage.getItem(url));      
+  var localStorageKey = "SpriteStorage" + imageType;
+  var retrieved = JSON.parse(localStorage.getItem(localStorageKey));      
   if(retrieved){
     console.log(url + ' retrieved from local storage. Length:' + retrieved.length);
     transmitImage(retrieved, imageType, callback);
     return;
-  }*/
+  }
   console.log('Requesting: ' + url);
   var request = new XMLHttpRequest();
   request.onload = function() {
@@ -190,8 +191,8 @@ function getAndTransmitImage(url, imageType, callback) {
     for(var i = 0; i < byteArray.byteLength; i++) {
       array.push(byteArray[i]);
     }
-    //Disabling sprite caching.
-    //localStorage.setItem(url, JSON.stringify(array));
+    
+    localStorage.setItem(localStorageKey, JSON.stringify(array));
     transmitImage(array, imageType, callback);
   };
   request.responseType = "arraybuffer";
