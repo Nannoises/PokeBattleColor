@@ -44,7 +44,7 @@ int pokemon_name_max_length = 10;
   
 static GFont level_font;
 int level_int = 1;
-int level_int_2 = 1;
+int level_int_2 = 100;
 
 static char level_string[10];
 static char level_string_2[10];
@@ -371,7 +371,7 @@ static void load_level_text_layers(Layer *window_layer)
   #if defined(PBL_RECT)
     text_level_enemy_layer = text_layer_create(GRect(19, 17, 70, 12));	
   #elif defined(PBL_ROUND)
-    text_level_enemy_layer = text_layer_create(GRect(35, 21, 70, 12));
+    text_level_enemy_layer = text_layer_create(GRect(37, 21, 70, 12));
   #endif    
  	text_layer_set_text_alignment(text_level_enemy_layer, GTextAlignmentLeft);
  	text_layer_set_text_color(text_level_enemy_layer, GColorBlack);
@@ -443,7 +443,7 @@ static void set_health_stats(){
   if(percentStepGoal <= 0){
     percentStepGoal = 1;
   }
-  level_int_2 = 100; //TODO change?
+  
   if(endOfDayPercentStepGoal >= 100)
   {        
     level_int = 100;
@@ -636,6 +636,15 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     } else if(image_type->value->int32 == IMAGE_TYPE_ENEMY_SPRITE){
       load_enemy_image();
     }  
+  }
+  
+  //Weather
+  Tuple *temperature_t = dict_find(iter, MESSAGE_KEY_Temperature);
+  if(temperature_t)
+  {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Temp recieved: %d", temperature_t->value->int32);        
+    level_int_2 = temperature_t->value->int32;
+    update_level_text();  
   }
 }
 

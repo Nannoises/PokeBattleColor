@@ -18,7 +18,8 @@
             "AppKeyChunkSize",
             "AppKeyDataLength",
             "ImageType",
-            "AppKeyIndex"
+            "AppKeyIndex",
+            "Temperature"
         ],
         "projectType": "native",
         "resources": {
@@ -86,8 +87,18 @@
                     "type": "bitmap"
                 },
                 {
+                    "characterRegex": "[0-9\\-]",
                     "file": "fonts/Pokemon_GB.ttf",
-                    "name": "FONT_DATE_7",
+                    "name": "FONT_LEVEL_10",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "font"
+                },
+                {
+                    "file": "fonts/Pokemon_GB.ttf",
+                    "name": "FONT_NAME_8",
                     "targetPlatforms": [
                         "basalt",
                         "chalk"
@@ -106,17 +117,7 @@
                 },
                 {
                     "file": "fonts/Pokemon_GB.ttf",
-                    "name": "FONT_NAME_8",
-                    "targetPlatforms": [
-                        "basalt",
-                        "chalk"
-                    ],
-                    "type": "font"
-                },
-                {
-                    "characterRegex": "[0-9]",
-                    "file": "fonts/Pokemon_GB.ttf",
-                    "name": "FONT_LEVEL_10",
+                    "name": "FONT_DATE_7",
                     "targetPlatforms": [
                         "basalt",
                         "chalk"

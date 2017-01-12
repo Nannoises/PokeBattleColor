@@ -5,7 +5,10 @@ var ConfigData = {
   "AllyShinySpriteUrl" : "",
   "EnemySpriteUrl" : "",
   "RandomMode" : false,
-  "LastRandomHour" : -1
+  "LastRandomHour" : -1,
+  "LastTempHour" : -1,
+  "WeatherAPIKey" : "",
+  "Temperature" : 100
 };
 var BUFFER_SIZE = 8000;
 var IMAGE_TYPE_ALLY_SPRITE = 0;
@@ -19,7 +22,8 @@ var SendConfig = function(callback){
   // Send the object
   var dict = {
     "EnemyName": (ConfigData.EnemyName.substring(0, POKEMON_NAME_MAX_LENGTH).trim().toUpperCase()),
-    "AllyName" : (ConfigData.AllyName.substring(0, POKEMON_NAME_MAX_LENGTH).trim().toUpperCase())
+    "AllyName" : (ConfigData.AllyName.substring(0, POKEMON_NAME_MAX_LENGTH).trim().toUpperCase()),
+    "Temperature" : Number.parseInt(ConfigData.Temperature)
   };
   Pebble.sendAppMessage(dict, function() {
     console.log('Message sent successfully: ' + JSON.stringify(dict));
@@ -53,16 +57,36 @@ var StoreConfigData = function(){
     localStorage.setItem(key.toString(), ConfigData[key]);    
   }
 };
+var ShouldGetWeather = function(){
+  if(ConfigData.WeatherAPIKey === undefined || ConfigData.WeatherAPIKey == ""){
+    return false;
+  }
+  var currentDate = new Date();
+  var currentHour = currentDate.getHours();
+  if(currentHour == ConfigData.LastTempHour){
+    return false;
+  }
+  return true;
+};
 Pebble.addEventListener('ready', function() {
   // PebbleKit JS is ready!
   console.log('PebbleKit JS ready!');
   RetrieveConfigData();
 
-  if(ConfigData.RandomMode === true){
-    ShowNewPokemonEachHour();
-  } else {    
-    SendSprites();  
-  }  
+  var sendDataToPhone = function(){
+    SendConfig();
+    if(ConfigData.RandomMode === true){
+      ShowNewPokemonEachHour();
+    } else {    
+      SendSprites();  
+    }
+  };
+  
+  if(ShouldGetWeather()){
+    getWeather(sendDataToPhone);
+  } else {
+    sendDataToPhone();
+  }
 });
 
 Pebble.addEventListener('showConfiguration', function() {
@@ -144,10 +168,16 @@ function SendSprites(callback){
 };
 Pebble.addEventListener('webviewclosed', function(e) {
   // Decode the user's preferences
+  console.log("Settings Response: " + e);
   var responseData = JSON.parse(decodeURIComponent(e.response));    
   for(var key in ConfigData){
-      if(key == 'RandomMode'){
+      if(key == 'Temperature'){
+        continue;
+      } else if(key == 'RandomMode'){
         ConfigData.RandomMode = responseData[key] == 1;
+      } else if(key == 'WeatherAPIKey' && (responseData[key] === undefined || responseData[key] == "" )){
+        ConfigData[key] = "";
+        ConfigData.Temperature = 100;
       } else {
         ConfigData[key] = responseData[key];
       }
@@ -160,6 +190,10 @@ Pebble.addEventListener('webviewclosed', function(e) {
     SendConfig();
     SendSprites();  
   }  
+  
+  if(ShouldGetWeather()){
+    getWeather(SendConfig);
+  }
 });
 function getAndTransmitImage(url, imageType, callback) {
   if(!url || url === ''){
@@ -262,4 +296,57 @@ Pebble.addEventListener('appmessage', function(e) {
   if(ConfigData.RandomMode === true){
     ShowNewPokemonEachHour();
   }
+  
+  if(ShouldGetWeather()){
+    getWeather(SendConfig);
+  }
 });
+function locationSuccess(pos, callback) {
+  // We will request the weather here
+  // Construct URL
+  var url = 'http://api.openweathermap.org/data/2.5/weather?lat=' +
+      pos.coords.latitude + '&lon=' + pos.coords.longitude + '&appid=' + ConfigData.WeatherAPIKey;
+
+  console.log('Requesting weather from: ' + url);
+  
+  // Send request to OpenWeatherMap
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function () {
+    
+    // responseText contains a JSON object with weather info
+    var json = JSON.parse(this.responseText);
+    console.log('Weather retrieved: ' + JSON.stringify(json));
+    if(json.cod == 200 && json.main && json.main.temp)
+    {
+      // Temperature in Kelvin requires adjustment
+      var temperature = Math.round(((json.main.temp * 9) / 5)  - 459.67);
+      console.log('Temperature is ' + temperature);
+  
+      ConfigData.Temperature = temperature;
+      var currentDate = new Date();
+      var currentHour = currentDate.getHours();
+      ConfigData.LastTempHour = currentHour;
+      StoreConfigData();
+    }
+    if(callback && callback instanceof Function){
+      callback();
+    }    
+  };
+  xhr.open('GET', url);
+  xhr.send();
+};
+
+function locationError(err, callback) {
+  console.log('Error requesting location!');
+  if(callback && callback instanceof Function){
+    callback();
+  }
+};
+
+function getWeather(callback) {
+  navigator.geolocation.getCurrentPosition(
+    function(pos){locationSuccess(pos, callback);},
+    function(err){locationError(err, callback);},
+    {timeout: 15000, maximumAge: 60000}
+  );
+};
