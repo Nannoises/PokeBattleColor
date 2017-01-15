@@ -18,21 +18,39 @@ var POKEMON_NAME_MAX_LENGTH = 10;
 var NUMBER_OF_POKEMON = 720;
 var HourlyPokemonTimeout;
 
-var SendConfig = function(callback){
-  // Send the object
-  var dict = {
-    "EnemyName": (ConfigData.EnemyName.substring(0, POKEMON_NAME_MAX_LENGTH).trim().toUpperCase()),
-    "AllyName" : (ConfigData.AllyName.substring(0, POKEMON_NAME_MAX_LENGTH).trim().toUpperCase()),
-    "Temperature" : Number.parseInt(ConfigData.Temperature)
-  };
-  Pebble.sendAppMessage(dict, function() {
-    console.log('Message sent successfully: ' + JSON.stringify(dict));
+
+var SendMessageToPhone = function(dictionary, callback){
+  Pebble.sendAppMessage(dictionary, function() {
+    console.log('Message sent successfully: ' + JSON.stringify(dictionary));
     if(callback && callback instanceof Function){
       callback();
     }
   }, function(e) {
     console.log('Message failed: ' + JSON.stringify(e));
   }); 
+};
+var SendNames = function(callback){  
+  var dict = {
+    "EnemyName": (ConfigData.EnemyName.substring(0, POKEMON_NAME_MAX_LENGTH).trim().toUpperCase()),
+    "AllyName" : (ConfigData.AllyName.substring(0, POKEMON_NAME_MAX_LENGTH).trim().toUpperCase())    
+  };
+  
+  SendMessageToPhone(dict, callback);
+};
+var SendTemperature = function(callback){  
+  var dict = {    
+    "Temperature" : Number.parseInt(ConfigData.Temperature)
+  };
+  SendMessageToPhone(dict, callback);
+};
+var SendConfig = function(callback){  
+  var dict = {
+    "EnemyName": (ConfigData.EnemyName.substring(0, POKEMON_NAME_MAX_LENGTH).trim().toUpperCase()),
+    "AllyName" : (ConfigData.AllyName.substring(0, POKEMON_NAME_MAX_LENGTH).trim().toUpperCase()),
+    "Temperature" : Number.parseInt(ConfigData.Temperature)
+  };
+
+  SendMessageToPhone(dict, callback);
 };
 var RetrieveConfigData = function(){
   for(var key in ConfigData){ 
@@ -58,7 +76,7 @@ var StoreConfigData = function(){
   }
 };
 var ShouldGetWeather = function(){
-  if(ConfigData.WeatherAPIKey === undefined || ConfigData.WeatherAPIKey == ""){
+  if(ConfigData.WeatherAPIKey === undefined || ConfigData.WeatherAPIKey === ""){
     return false;
   }
   var currentDate = new Date();
@@ -72,20 +90,13 @@ Pebble.addEventListener('ready', function() {
   // PebbleKit JS is ready!
   console.log('PebbleKit JS ready!');
   RetrieveConfigData();
-
-  var sendDataToPhone = function(){
-    SendConfig();
-    if(ConfigData.RandomMode === true){
-      ShowNewPokemonEachHour();
-    } else {    
-      SendSprites();  
-    }
-  };
-  
+  if(ConfigData.RandomMode === true){
+    ShowNewPokemonEachHour();
+  } else {    
+    SendSprites();  
+  }
   if(ShouldGetWeather()){
-    getWeather(sendDataToPhone);
-  } else {
-    sendDataToPhone();
+    getWeather(SendTemperature);
   }
 });
 
@@ -146,7 +157,7 @@ function ShowRandomPokemon(callback){
        ConfigData.EnemyName = name;
        GetPokemonName(randomPoke2, function(name){
          ConfigData.AllyName = name;
-         SendConfig();
+         SendNames();
          StoreConfigData();
          if(callback && callback instanceof Function){
            callback();
@@ -187,12 +198,12 @@ Pebble.addEventListener('webviewclosed', function(e) {
   if(ConfigData.RandomMode === true){
     ShowNewPokemonEachHour();
   } else {
-    SendConfig();
+    SendNames();
     SendSprites();  
   }  
   
   if(ShouldGetWeather()){
-    getWeather(SendConfig);
+    getWeather(SendTemperature);
   }
 });
 function getAndTransmitImage(url, imageType, callback) {
@@ -298,7 +309,7 @@ Pebble.addEventListener('appmessage', function(e) {
   }
   
   if(ShouldGetWeather()){
-    getWeather(SendConfig);
+    getWeather(SendTemperature);
   }
 });
 function locationSuccess(pos, callback) {

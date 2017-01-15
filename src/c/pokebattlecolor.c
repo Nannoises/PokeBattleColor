@@ -57,6 +57,7 @@ TextLayer *text_level_enemy_layer;
 #define ALLY_SHINY_SPRITE_PKEY 4
 #define ENEMY_SPRITE_PKEY 5
 #define SPRITE_SIZES_PKEY 6
+#define TEMPERATURE_PKEY 7
 
 #define IMAGE_TYPE_ALLY_SPRITE 0
 #define IMAGE_TYPE_ALLY_SHINY_SPRITE 1
@@ -572,6 +573,7 @@ static void handle_bluetooth(bool connected) {
 static void save_configured_data(){
   persist_write_string(ENEMY_NAME_PKEY, ENEMY_POKEMON_NAME);
   persist_write_string(ALLY_NAME_PKEY, ALLY_POKEMON_NAME);
+  persist_write_int(TEMPERATURE_PKEY, level_int_2);
 }
 
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
@@ -666,7 +668,9 @@ static void retrieve_configured_data(){
     strcpy(ALLY_POKEMON_NAME, "CHARIZARD");
   }
   
-  //Retrieve image data TODO  
+  if(persist_exists(TEMPERATURE_PKEY)){
+    level_int_2 = persist_read_int(TEMPERATURE_PKEY);    
+  }
 }
 
 void handle_init(void) {
