@@ -2,36 +2,52 @@
     "author": "birdmanherron@gmail.com",
     "dependencies": {},
     "keywords": [],
-    "name": "pokebattle-color",
+    "name": "pkebtle-cstm",
     "pebble": {
         "capabilities": [
+            "location",
             "configurable",
             "health"
         ],
-        "displayName": "PokeBattle Color",
+        "displayName": "PokeBattle Custom",
         "enableMultiJS": false,
         "messageKeys": [
             "EnemyName",
             "AllyName",
-            "FocusAnimate",
-            "FlickAnimate"
+            "AppKeyComplete",
+            "AppKeyDataChunk",
+            "AppKeyChunkSize",
+            "AppKeyDataLength",
+            "ImageType",
+            "AppKeyIndex",
+            "Temperature"
         ],
         "projectType": "native",
         "resources": {
             "media": [
                 {
-                    "file": "images/sleep.png",
-                    "name": "STATUS_SLEEP",
+                    "file": "images/roundBackground.png",
+                    "name": "BACKGROUND",
                     "targetPlatforms": [
-                        "basalt"
+                        "chalk"
                     ],
                     "type": "bitmap"
                 },
                 {
-                    "file": "images/paralysis.png",
-                    "name": "STATUS_PARALYSIS",
+                    "file": "images/ball.png",
+                    "name": "BALL",
                     "targetPlatforms": [
-                        "basalt"
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/2016-07-21.png",
+                    "name": "GRASS_TERRAIN",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
                     ],
                     "type": "bitmap"
                 },
@@ -40,7 +56,26 @@
                     "menuIcon": true,
                     "name": "MENU",
                     "targetPlatforms": [
-                        "basalt"
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/sleep.png",
+                    "name": "STATUS_SLEEP",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/paralysis.png",
+                    "name": "STATUS_PARALYSIS",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
                     ],
                     "type": "bitmap"
                 },
@@ -53,11 +88,12 @@
                     "type": "bitmap"
                 },
                 {
-                    "characterRegex": "[0-9]",
+                    "characterRegex": "[0-9\\-]",
                     "file": "fonts/Pokemon_GB.ttf",
                     "name": "FONT_LEVEL_10",
                     "targetPlatforms": [
-                        "basalt"
+                        "basalt",
+                        "chalk"
                     ],
                     "type": "font"
                 },
@@ -65,7 +101,8 @@
                     "file": "fonts/Pokemon_GB.ttf",
                     "name": "FONT_NAME_8",
                     "targetPlatforms": [
-                        "basalt"
+                        "basalt",
+                        "chalk"
                     ],
                     "type": "font"
                 },
@@ -74,7 +111,8 @@
                     "file": "fonts/Pokemon_GB.ttf",
                     "name": "FONT_TIME_24",
                     "targetPlatforms": [
-                        "basalt"
+                        "basalt",
+                        "chalk"
                     ],
                     "type": "font"
                 },
@@ -82,44 +120,22 @@
                     "file": "fonts/Pokemon_GB.ttf",
                     "name": "FONT_DATE_7",
                     "targetPlatforms": [
-                        "basalt"
+                        "basalt",
+                        "chalk"
                     ],
                     "type": "font"
-                },
-                {
-                    "file": "data/009.png",
-                    "name": "ENEMY_POKEMON",
-                    "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "raw"
-                },
-                {
-                    "file": "data/006b.png",
-                    "name": "ALLY_POKEMON_SHINY",
-                    "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "raw"
-                },
-                {
-                    "file": "data/006.png",
-                    "name": "ALLY_POKEMON",
-                    "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "raw"
                 }
             ]
         },
         "sdkVersion": "3",
         "targetPlatforms": [
-            "basalt"
+            "basalt",
+            "chalk"
         ],
-        "uuid": "2d81b6f1-3a4a-4375-8e51-a978a29648e6",
+        "uuid": "8df91b1a-2aae-4072-8926-4c6724b80b0c",
         "watchapp": {
             "watchface": true
         }
     },
-    "version": "2.3.0"
+    "version": "1.5.0"
 }
