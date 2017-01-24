@@ -15,8 +15,9 @@ var IMAGE_TYPE_ALLY_SPRITE = 0;
 var IMAGE_TYPE_ALLY_SHINY_SPRITE = 1;
 var IMAGE_TYPE_ENEMY_SPRITE = 2;
 var POKEMON_NAME_MAX_LENGTH = 10;
-var NUMBER_OF_POKEMON = 720;
+var NUMBER_OF_POKEMON = 800;
 var HourlyPokemonTimeout;
+var PokemonServiceDomain = "https://birdcloudbeta.herokuapp.com";
 
 
 var SendMessageToPhone = function(dictionary, callback){
@@ -101,7 +102,7 @@ Pebble.addEventListener('ready', function() {
 });
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'http://birdhelloworld.herokuapp.com/custom-beta?';
+  var url = PokemonServiceDomain + '/custom?';
   for(var key in ConfigData){
     if(ConfigData[key] !== undefined)
       url += (key.toString() + '=' + ConfigData[key].toString() + '&');
@@ -109,7 +110,7 @@ Pebble.addEventListener('showConfiguration', function() {
   Pebble.openURL(url);
 });
 function GetPokemonName(index, callback){
-  var url = "http://birdhelloworld.herokuapp.com/pokemonName?Index=" + index;
+  var url = PokemonServiceDomain + "/pokemonName?Index=" + index;
   var xhr = new XMLHttpRequest();
   xhr.onload = function () {
     console.log('Name retrieved: ' + this.responseText);
@@ -149,9 +150,9 @@ function ShowNewPokemonEachHour(){
 function ShowRandomPokemon(callback){
   var randomPoke1 = Math.floor(Math.random() * (NUMBER_OF_POKEMON + 1));
   var randomPoke2 = Math.floor(Math.random() * (NUMBER_OF_POKEMON + 1));
-  ConfigData.EnemySpriteUrl = "http://birdhelloworld.herokuapp.com/getMostRecentFrontSprite?Index=" + randomPoke1;
-  ConfigData.AllySpriteUrl = "http://birdhelloworld.herokuapp.com/getMostRecentBackSprite?Index=" + randomPoke2;
-  ConfigData.AllyShinySpriteUrl = "http://birdhelloworld.herokuapp.com/getMostRecentBackSpriteShiny?Index=" + randomPoke2;
+  ConfigData.EnemySpriteUrl = PokemonServiceDomain + "/getMostRecentFrontSprite?Index=" + randomPoke1;
+  ConfigData.AllySpriteUrl = PokemonServiceDomain + "/getMostRecentBackSprite?Index=" + randomPoke2;
+  ConfigData.AllyShinySpriteUrl = PokemonServiceDomain + "/getMostRecentBackSpriteShiny?Index=" + randomPoke2;
   SendSprites(function(){
      GetPokemonName(randomPoke1, function(name){
        ConfigData.EnemyName = name;
@@ -215,7 +216,7 @@ function getAndTransmitImage(url, imageType, callback) {
   }
   
   //Call format route to format image for Pebble.
-  url = 'http://birdhelloworld.herokuapp.com/formatImage?ImageUrl=' + url;
+  url = PokemonServiceDomain + '/formatImage?ImageUrl=' + url;
   if(ConfigData.Dither === true){
     url += '&Dither=true';
   }
