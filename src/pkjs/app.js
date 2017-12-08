@@ -15,7 +15,7 @@ var IMAGE_TYPE_ALLY_SPRITE = 0;
 var IMAGE_TYPE_ALLY_SHINY_SPRITE = 1;
 var IMAGE_TYPE_ENEMY_SPRITE = 2;
 var POKEMON_NAME_MAX_LENGTH = 10;
-var NUMBER_OF_POKEMON = 800;
+var NUMBER_OF_POKEMON = 806;
 var HourlyPokemonTimeout;
 var PokemonServiceDomain = "https://birdcloudbeta.herokuapp.com";
 
