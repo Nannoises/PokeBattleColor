@@ -26,10 +26,46 @@
         "resources": {
             "media": [
                 {
+                    "file": "images/sleep.png",
+                    "name": "STATUS_SLEEP",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "bitmap"
+                },
+                {
                     "file": "images/roundBackground.png",
                     "name": "BACKGROUND",
                     "targetPlatforms": [
                         "chalk"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/paralysis.png",
+                    "name": "STATUS_PARALYSIS",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/menu.png",
+                    "menuIcon": true,
+                    "name": "MENU",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/colorBackground.png",
+                    "name": "BACKGROUND",
+                    "targetPlatforms": [
+                        "basalt"
                     ],
                     "type": "bitmap"
                 },
@@ -52,54 +88,8 @@
                     "type": "bitmap"
                 },
                 {
-                    "file": "images/menu.png",
-                    "menuIcon": true,
-                    "name": "MENU",
-                    "targetPlatforms": [
-                        "basalt",
-                        "chalk"
-                    ],
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/sleep.png",
-                    "name": "STATUS_SLEEP",
-                    "targetPlatforms": [
-                        "basalt",
-                        "chalk"
-                    ],
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/paralysis.png",
-                    "name": "STATUS_PARALYSIS",
-                    "targetPlatforms": [
-                        "basalt",
-                        "chalk"
-                    ],
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/colorBackground.png",
-                    "name": "BACKGROUND",
-                    "targetPlatforms": [
-                        "basalt"
-                    ],
-                    "type": "bitmap"
-                },
-                {
-                    "characterRegex": "[0-9\\-]",
                     "file": "fonts/Pokemon_GB.ttf",
-                    "name": "FONT_LEVEL_10",
-                    "targetPlatforms": [
-                        "basalt",
-                        "chalk"
-                    ],
-                    "type": "font"
-                },
-                {
-                    "file": "fonts/Pokemon_GB.ttf",
-                    "name": "FONT_NAME_8",
+                    "name": "FONT_DATE_7",
                     "targetPlatforms": [
                         "basalt",
                         "chalk"
@@ -118,7 +108,17 @@
                 },
                 {
                     "file": "fonts/Pokemon_GB.ttf",
-                    "name": "FONT_DATE_7",
+                    "name": "FONT_NAME_8",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "font"
+                },
+                {
+                    "characterRegex": "[0-9\\-]",
+                    "file": "fonts/Pokemon_GB.ttf",
+                    "name": "FONT_LEVEL_10",
                     "targetPlatforms": [
                         "basalt",
                         "chalk"
